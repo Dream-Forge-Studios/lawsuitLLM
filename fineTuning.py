@@ -5,12 +5,21 @@ from datasets import load_dataset
 from trl import SFTTrainer
 from huggingface_hub import notebook_login
 
+def formatting_prompts_func(example):
+    output_texts = []
+    for i in range(len(example['instruction'])):
+        text = f"### Question: {example['instruction'][i]}\n ### Answer: {example['output'][i]}"
+        output_texts.append(text)
+    return output_texts
+
 base_model = "maywell/Synatra-7B-v0.3-dpo"
 dataset_name, new_model = "jiwoochris/easylaw_kr", "tyflow/lawsuit-7B-easylaw_kr"
 
 # Loading a Gath_baize dataset
 dataset = load_dataset(dataset_name, split="train")
 dataset["instruction"][0]
+
+
 
 # Load base model(Mistral 7B)
 bnb_config = BitsAndBytesConfig(
@@ -86,9 +95,9 @@ training_arguments = TrainingArguments(
 trainer = SFTTrainer(
     model=model,
     train_dataset=dataset,
+    formatting_func=formatting_prompts_func,
     peft_config=peft_config,
     max_seq_length= None,
-    dataset_text_field="instruction",
     tokenizer=tokenizer,
     args=training_arguments,
     packing= False,
