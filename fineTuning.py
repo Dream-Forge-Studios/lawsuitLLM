@@ -11,7 +11,7 @@ dataset_name, new_model = "jiwoochris/easylaw_kr", "tyflow/lawsuit-7B-easylaw_kr
 
 # Loading a Gath_baize dataset
 dataset = load_dataset(dataset_name, split="train")
-dataset["instruction"][0]
+print(dataset["instruction"][0])
 
 
 
@@ -24,7 +24,7 @@ bnb_config = BitsAndBytesConfig(
 )
 
 #gpu 개수 지정시
-#os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 model = AutoModelForCausalLM.from_pretrained(
     base_model,
@@ -32,8 +32,10 @@ model = AutoModelForCausalLM.from_pretrained(
 )
 model.config.use_cache = False # silence the warnings. Please re-enable for inference!
 
-# 병렬 처리를 위한 parallelize 호출
-model.parallelize()
+# GPU 설정 및 DataParallel 적용
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
+model = torch.nn.DataParallel(model)
 
 # 텐서 병렬 처리 설정
 model.config.pretraining_tp = 1
