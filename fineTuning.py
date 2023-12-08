@@ -33,8 +33,6 @@ model = AutoModelForCausalLM.from_pretrained(
 model.config.use_cache = False # silence the warnings. Please re-enable for inference!
 
 # GPU 설정 및 DataParallel 적용
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
 model = torch.nn.DataParallel(model)
 
 # 텐서 병렬 처리 설정
