@@ -89,15 +89,15 @@ def formatting_prompts_func(example):
 
 
 
-response_template = "</s><lim_end|>"
-collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=tokenizer)
+# response_template = "</s><lim_end|>"
+# collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=tokenizer)
 
 # Setting sft parameters
 trainer = SFTTrainer(
     model=model,
     train_dataset=dataset,
     formatting_func=formatting_prompts_func,
-    data_collator=collator,
+    # data_collator=collator,
     peft_config=peft_config,
     max_seq_length= None,
     tokenizer=tokenizer,
