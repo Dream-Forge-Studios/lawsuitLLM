@@ -83,7 +83,7 @@ training_arguments = TrainingArguments(
 def formatting_prompts_func(example):
     output_texts = []
     for i in range(len(example['instruction'])):
-        text = f"<|im_start|>user{example['instruction'][i]}<|im_end|> {example['output'][i]}</s><|im_end|>"
+        text = f"<s>[INST]{example['instruction'][i]}[/INST] {example['output'][i]}</s>"
         output_texts.append(text)
     return output_texts
 
