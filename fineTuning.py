@@ -90,20 +90,20 @@ def formatting_prompts_func(example):
 
 
 # 데이터 콜레이터 인스턴스 생성
-collator = DataCollatorForCompletionOnlyLM(
-    tokenizer=tokenizer,
-    mlm=False,
-    instruction_template="<s>[INST]",
-    response_template="[/INST]",
-    pad_to_multiple_of=8  # 필요한 경우 패딩을 특정 배수로 맞춤
-)
+# collator = DataCollatorForCompletionOnlyLM(
+#     tokenizer=tokenizer,
+#     mlm=False,
+#     instruction_template="<s>[INST]",
+#     response_template="[/INST]",
+#     pad_to_multiple_of=8  # 필요한 경우 패딩을 특정 배수로 맞춤
+# )
 
 # Setting sft parameters
 trainer = SFTTrainer(
     model=model,
     train_dataset=dataset,
     formatting_func=formatting_prompts_func,
-    data_collator=collator,
+    # data_collator=collator,
     peft_config=peft_config,
     max_seq_length= None,
     tokenizer=tokenizer,
