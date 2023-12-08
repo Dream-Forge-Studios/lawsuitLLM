@@ -11,9 +11,8 @@ dataset_name, new_model = "jiwoochris/easylaw_kr", "tyflow/lawsuit-7B-easylaw_kr
 
 # Loading a Gath_baize dataset
 dataset = load_dataset(dataset_name, split="train")
-print(dataset["instruction"][0])
 
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 # Load base model(Mistral 7B)
 bnb_config = BitsAndBytesConfig(
@@ -23,20 +22,15 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_use_double_quant= False,
 )
 
-#gpu 개수 지정시
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 model = AutoModelForCausalLM.from_pretrained(
     base_model,
     quantization_config=bnb_config,
+    device_map="auto"
 )
 model.config.use_cache = False # silence the warnings. Please re-enable for inference!
-
-# GPU 설정 및 DataParallel 적용
-model = torch.nn.DataParallel(model)
-
-# 텐서 병렬 처리 설정
 model.config.pretraining_tp = 1
+model.gradient_checkpointing_enable()
 
 # 그래디언트 체크포인팅 활성화
 model.gradient_checkpointing_enable()
