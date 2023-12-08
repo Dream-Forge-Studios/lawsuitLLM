@@ -2,15 +2,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from peft import LoraConfig, PeftModel, prepare_model_for_kbit_training, get_peft_model
 import os, torch, wandb, platform, warnings
 from datasets import load_dataset
-from trl import SFTTrainer
+from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 from huggingface_hub import notebook_login
 
-def formatting_prompts_func(example):
-    output_texts = []
-    for i in range(len(example['instruction'])):
-        text = f"### Question: {example['instruction'][i]}\n ### Answer: {example['output'][i]}"
-        output_texts.append(text)
-    return output_texts
 
 base_model = "maywell/Synatra-7B-v0.3-dpo"
 dataset_name, new_model = "jiwoochris/easylaw_kr", "tyflow/lawsuit-7B-easylaw_kr"
@@ -91,11 +85,25 @@ training_arguments = TrainingArguments(
     lr_scheduler_type= "constant",
     report_to="wandb"
 )
+
+def formatting_prompts_func(example):
+    output_texts = []
+    for i in range(len(example['instruction'])):
+        text = f"user{example['instruction'][i]}<lim_end|> {example['output'][i]}</s><lim_end|>"
+        output_texts.append(text)
+    return output_texts
+
+
+
+response_template = "</s><lim_end|>"
+collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=tokenizer)
+
 # Setting sft parameters
 trainer = SFTTrainer(
     model=model,
     train_dataset=dataset,
     formatting_func=formatting_prompts_func,
+    data_collator=collator,
     peft_config=peft_config,
     max_seq_length= None,
     tokenizer=tokenizer,
