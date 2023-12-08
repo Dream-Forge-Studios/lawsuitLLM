@@ -41,7 +41,7 @@ tokenizer.pad_token = tokenizer.eos_token
 tokenizer.add_eos_token = True
 tokenizer.add_bos_token, tokenizer.add_eos_token
 
-with open('/mnt/graid/cvmip/data/wandbKey_js.txt', 'r') as file:
+with open('/data/data/wandbKey_js.txt', 'r') as file:
     wandb_key = file.read().strip()
 
 wandb.login(key = wandb_key)
