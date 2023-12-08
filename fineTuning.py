@@ -7,7 +7,7 @@ from huggingface_hub import notebook_login
 
 
 base_model = "maywell/Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "jiwoochris/easylaw_kr", "tyflow/lawsuit-7B-easylaw_kr"
+dataset_name, new_model = "jiwoochris/easylaw_kr", "/data/data/lawsuit-7B-easylaw_kr-v0.1"
 
 # Loading a Gath_baize dataset
 dataset = load_dataset(dataset_name, split="train")
@@ -89,15 +89,21 @@ def formatting_prompts_func(example):
 
 
 
-# response_template = "</s><lim_end|>"
-# collator = DataCollatorForCompletionOnlyLM(response_template, tokenizer=tokenizer)
+# 데이터 콜레이터 인스턴스 생성
+collator = DataCollatorForCompletionOnlyLM(
+    tokenizer=tokenizer,
+    mlm=False,
+    instruction_template="<s>[INST]",
+    response_template="[/INST]",
+    pad_to_multiple_of=8  # 필요한 경우 패딩을 특정 배수로 맞춤
+)
 
 # Setting sft parameters
 trainer = SFTTrainer(
     model=model,
     train_dataset=dataset,
     formatting_func=formatting_prompts_func,
-    # data_collator=collator,
+    data_collator=collator,
     peft_config=peft_config,
     max_seq_length= None,
     tokenizer=tokenizer,
