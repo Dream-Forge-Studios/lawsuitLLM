@@ -1,14 +1,18 @@
-from transformers import AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel, PeftConfig
+import torch
 
 device = "cuda" # the device to load the model onto
+base_model = "maywell/Synatra-7B-v0.3-dpo"
 
-# 먼저 원래 모델의 구성을 불러옵니다.
-config = PeftConfig.from_pretrained("maywell/Synatra-7B-v0.3-dpo")
+model = AutoModelForCausalLM.from_pretrained(
+    base_model, low_cpu_mem_usage=True,
+    return_dict=True,torch_dtype=torch.bfloat16,
+    device_map= {"": 0})
 
 # LORA로 미세조정한 모델을 로드합니다.
-model_path = "/data/data/lawsuit-7B-easylaw_kr-v0.1"
-model = PeftModel.from_pretrained(model_path, config=config)
+new_model = "/data/data/lawsuit-7B-easylaw_kr-v0.1"
+model = PeftModel.from_pretrained(model, new_model)
 
 tokenizer = AutoTokenizer.from_pretrained("maywell/Synatra-7B-v0.3-dpo")
 
