@@ -62,7 +62,7 @@ model = get_peft_model(model, peft_config)
 # Hyperparameters should beadjusted based on the hardware you using
 training_arguments = TrainingArguments(
     output_dir= "./results",
-    num_train_epochs= 1,
+    num_train_epochs= 3,
     per_device_train_batch_size= 8,
     gradient_accumulation_steps= 2,
     optim = "paged_adamw_8bit",

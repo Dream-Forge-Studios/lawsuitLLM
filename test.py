@@ -17,7 +17,11 @@ def stream(user_prompt):
     generated_ids = model.generate(**inputs, streamer=streamer, max_new_tokens=200)
 
     decoded = tokenizer.batch_decode(generated_ids)
-    print(decoded[0])
+    # 질문과 답변 분리
+    question, answer = decoded[0].split("[/INST]")
+
+    print(f"질문:", question.replace("[INST]", "").strip())
+    print("\n답변:", answer.strip())
 
 device = "cuda" # the device to load the model onto
 base_model = "maywell/Synatra-7B-v0.3-dpo"
