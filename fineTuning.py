@@ -7,7 +7,7 @@ from huggingface_hub import notebook_login
 
 
 base_model = "maywell/Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "jiwoochris/easylaw_kr", "/data/data/lawsuit-7B-easylaw_kr-v0.1"
+dataset_name, new_model = "jiwoochris/easylaw_kr", "/data/data/lawsuit-7B-easylaw_kr-e3"
 
 # Loading a Gath_baize dataset
 dataset = load_dataset(dataset_name, split="train")

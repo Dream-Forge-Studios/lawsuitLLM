@@ -23,17 +23,16 @@ def stream(user_prompt):
     print(f"질문:", question.replace("[INST]", "").strip())
     print("\n답변:", answer.strip())
 
-device = "cuda" # the device to load the model onto
 base_model = "maywell/Synatra-7B-v0.3-dpo"
 
 model = AutoModelForCausalLM.from_pretrained(
-    base_model, low_cpu_mem_usage=True,
+    "maywell/Synatra-7B-v0.3-dpo", low_cpu_mem_usage=True,
     return_dict=True,torch_dtype=torch.bfloat16,
     device_map= {"": 0})
 
 # LORA로 미세조정한 모델을 로드합니다.
-# new_model = "/data/data/lawsuit-7B-easylaw_kr-v0.1"
-# model = PeftModel.from_pretrained(model, new_model)
+new_model = "/data/data/lawsuit-7B-easylaw_kr-v0.1"
+model = PeftModel.from_pretrained(model, new_model)
 
 tokenizer = AutoTokenizer.from_pretrained("maywell/Synatra-7B-v0.3-dpo")
 
