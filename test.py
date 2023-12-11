@@ -2,11 +2,11 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 device = "cuda" # the device to load the model onto
 
-model = AutoModelForCausalLM.from_pretrained("maywell/Synatra-7B-v0.3-dpo")
-tokenizer = AutoTokenizer.from_pretrained("maywell/Synatra-7B-v0.3-dpo")
+model = AutoModelForCausalLM.from_pretrained("/data/data/lawsuit-7B-easylaw_kr-v0.1/adapter_model.safetensors")
+tokenizer = AutoTokenizer.from_pretrained("/data/data/lawsuit-7B-easylaw_kr-v0.1/adapter_model.safetensors")
 
 messages = [
-    {"role": "user", "content": "바나나는 원래 하얀색이야?"},
+    {"role": "user", "content": "신호를 어겨서 벌점을 받았는데 이 벌점은 계속 유지되는거야?"},
 ]
 
 encodeds = tokenizer.apply_chat_template(messages, return_tensors="pt")
