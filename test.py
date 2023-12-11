@@ -1,6 +1,23 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, TextStreamer
 from peft import PeftModel, PeftConfig
 import torch
+
+def stream(user_prompt):
+    runtimeFlag = "cuda:0"
+    # system_prompt = 'The conversation between Human and AI assisatance named Gathnex\n'
+    B_INST, E_INST = "[INST]", "[/INST]"
+
+    # prompt = f"{system_prompt}{B_INST}{user_prompt.strip()}\n{E_INST}"
+    prompt = f"{B_INST}{user_prompt.strip()}\n{E_INST}"
+
+    inputs = tokenizer([prompt], return_tensors="pt").to(runtimeFlag)
+
+    streamer = TextStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
+
+    generated_ids = model.generate(**inputs, streamer=streamer, max_new_tokens=200)
+
+    decoded = tokenizer.batch_decode(generated_ids)
+    print(decoded[0])
 
 device = "cuda" # the device to load the model onto
 base_model = "maywell/Synatra-7B-v0.3-dpo"
@@ -16,15 +33,5 @@ model = PeftModel.from_pretrained(model, new_model)
 
 tokenizer = AutoTokenizer.from_pretrained("maywell/Synatra-7B-v0.3-dpo")
 
-messages = [
-    {"role": "user", "content": "신호를 어겨서 벌점을 받았는데 이거는 평생가는거야?"}
-]
+stream("신호를 어겨서 벌점을 받았는데 이거는 평생가는거야?")
 
-encodeds = tokenizer.apply_chat_template(messages, return_tensors="pt")
-
-model_inputs = encodeds.to(device)
-model.to(device)
-
-generated_ids = model.generate(model_inputs, max_new_tokens=1000, do_sample=True)
-decoded = tokenizer.batch_decode(generated_ids)
-print(decoded[0])
