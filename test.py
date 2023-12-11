@@ -33,5 +33,5 @@ model = PeftModel.from_pretrained(model, new_model)
 
 tokenizer = AutoTokenizer.from_pretrained("maywell/Synatra-7B-v0.3-dpo")
 
-stream("신호를 어겨서 벌점을 받았는데 이거는 평생가는거야?")
+stream("일을 했는데 사장이 돈을 주지 않고 있어서 소송을 하려고 하는데 어떻게 할 수 있을까?")
 
