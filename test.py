@@ -31,10 +31,10 @@ model = AutoModelForCausalLM.from_pretrained(
     device_map= {"": 0})
 
 # LORA로 미세조정한 모델을 로드합니다.
-new_model = "/data/llm/lawsuit-7B-easylaw_kr-v0.1"
+new_model = "/data/llm/lawsuit-7B-easylaw_kr-e3"
 model = PeftModel.from_pretrained(model, new_model)
 
-tokenizer = AutoTokenizer.from_pretrained("maywell/Synatra-7B-v0.3-dpo")
+tokenizer = AutoTokenizer.from_pretrained("/data/llm/Synatra-7B-v0.3-dpo")
 
 stream("신호를 어겨서 벌점을 받았는데 이거는 평생가는거야?")
 
