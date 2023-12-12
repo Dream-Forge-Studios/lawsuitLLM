@@ -6,8 +6,8 @@ from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 from huggingface_hub import notebook_login
 
 
-base_model = "maywell/Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "jiwoochris/easylaw_kr", "/data/data/lawsuit-7B-easylaw_kr-e3"
+base_model = "/data/llm/Synatra-7B-v0.3-dpo"
+dataset_name, new_model = "jiwoochris/easylaw_kr", "/data/llm/lawsuit-7B-easylaw_kr-e3"
 
 # Loading a Gath_baize dataset
 dataset = load_dataset(dataset_name, split="train")
@@ -41,7 +41,7 @@ tokenizer.pad_token = tokenizer.eos_token
 tokenizer.add_eos_token = True
 tokenizer.add_bos_token, tokenizer.add_eos_token
 
-with open('/data/data/wandbKey_js.txt', 'r') as file:
+with open('/data/llm/wandbKey_js.txt', 'r') as file:
     wandb_key = file.read().strip()
 
 wandb.login(key = wandb_key)
