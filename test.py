@@ -1,20 +1,6 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextStreamer
 from peft import PeftModel
 import torch
-import time
-
-# CUDA 사용 가능 여부 확인
-cuda_available = torch.cuda.is_available()
-
-print(f"CUDA Available: {cuda_available}")
-
-# 사용 가능한 GPU 개수와 각 GPU 정보 출력
-if cuda_available:
-    num_gpus = torch.cuda.device_count()
-    print(f"Number of GPUs Available: {num_gpus}")
-    for i in range(num_gpus):
-        print(f"GPU {i}: Name: {torch.cuda.get_device_name(i)}")
-time.sleep(1000)
 def stream(user_prompt):
     runtimeFlag = "cuda:0"
     # system_prompt = 'The conversation between Human and AI assisatance named Gathnex\n'

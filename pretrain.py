@@ -7,10 +7,13 @@ from huggingface_hub import notebook_login
 
 
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-wage"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-wage-a"
 
 # Loading a Gath_baize dataset
 dataset = load_dataset(dataset_name, split="train")
+
+# '민사' 사건 중 '임금'만 포함된 데이터 필터링
+civil_cases_with_wage = dataset.filter(lambda x: x['사건종류명'] == '민사' and '임금' in x['사건내용'])
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
@@ -63,8 +66,8 @@ model = get_peft_model(model, peft_config)
 training_arguments_a = TrainingArguments(
     output_dir= "./results",
     num_train_epochs= 1,
-    per_device_train_batch_size= 8,
-    gradient_accumulation_steps= 2,
+    per_device_train_batch_size= 4,
+    gradient_accumulation_steps= 4,
     optim = "paged_adamw_8bit",
     save_steps= 30,
     logging_steps= 30,
@@ -136,7 +139,7 @@ def formatting_prompts_func(example):
 
 trainer = Trainer(
         model=model,
-        train_dataset=dataset,
+        train_dataset=civil_cases_with_wage,
         eval_dataset=None,
         args=training_arguments_a,
         data_collator=DataCollatorForLanguageModeling(
@@ -145,8 +148,8 @@ trainer = Trainer(
     )
 
 trainer.train()
+model.config.use_cache = False
+model.print_trainable_parameters() # 훈련하는 파라미터의 % 체크
 # Save the fine-tuned model
 trainer.model.save_pretrained(new_model)
 wandb.finish()
-model.config.use_cache = True
-model.eval()
