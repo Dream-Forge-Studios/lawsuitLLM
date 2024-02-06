@@ -9,11 +9,22 @@ from huggingface_hub import notebook_login
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-wage-a"
 
+test_case_file = "/data/llm/test_case_numbers.txt"
+
+# 파일에서 판례정보일련번호 목록 로드
+with open(test_case_file, 'r') as f:
+    test_case_numbers = [line.strip() for line in f.readlines()]
+
 # Loading a Gath_baize dataset
 dataset = load_dataset(dataset_name, split="train")
 
-# '민사' 사건 중 '임금'만 포함된 데이터 필터링
-civil_cases_with_wage = dataset.filter(lambda x: x['사건종류명'] == '민사' and x['사건명'] is not None and '임금' in x['사건명'])
+# '민사' 사건 중 '임금'만 포함된 데이터 필터링하면서 테스트 케이스 제외
+civil_cases_with_wage_excluded = dataset.filter(
+    lambda x: x['사건종류명'] == '민사' and
+              x['사건명'] is not None and
+              '임금' in x['사건명'] and
+              x['판례정보일련번호'] not in test_case_numbers
+)
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
@@ -139,7 +150,7 @@ def formatting_prompts_func(example):
 
 trainer = Trainer(
         model=model,
-        train_dataset=civil_cases_with_wage,
+        train_dataset=civil_cases_with_wage_excluded,
         eval_dataset=None,
         args=training_arguments_a,
         data_collator=DataCollatorForLanguageModeling(
