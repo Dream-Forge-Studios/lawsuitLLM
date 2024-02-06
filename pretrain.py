@@ -52,7 +52,8 @@ with open(test_case_file, 'r') as f:
     test_case_numbers = [line.strip() for line in f.readlines()]
 
 # Loading a Gath_baize dataset
-dataset = load_dataset(dataset_name, split="train")
+custom_cache_dir = "/data/huggingface/cache/"
+dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train")
 
 # '민사' 사건 중 '임금'만 포함된 데이터 필터링하면서 테스트 케이스 제외
 civil_cases_with_wage_excluded = dataset.filter(
