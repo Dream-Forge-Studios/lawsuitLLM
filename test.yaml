@@ -1,0 +1,52 @@
+apiVersion: v1 # 고장
+kind: Pod # 고정
+metadata:
+  name: ccvmip-test #변경
+spec:
+  securityContext:
+    runAsUser: 0  # UID 변경
+    runAsGroup: 0 # GID 변경
+    fsGroup: 1006    # cvmip 1006
+
+  restartPolicy: Never #그냥 두면됨
+
+  volumes: # 그대로
+  - name: shmdir
+    emptyDir:
+      medium: Memory
+  - name: pvc-volume
+    persistentVolumeClaim:
+       claimName: cvmip-nfs # 변경
+
+  containers:
+  - name: gpu-container
+    image: pytorch/pytorch:latest
+    volumeMounts:
+    - mountPath: /dev/shm
+      name: shmdir
+    - mountPath: /data ##학습데이터 변경
+      name: pvc-volume
+    command:
+      - "/bin/sh"
+      - "-c"
+    args:
+      - >-
+        set -x &&
+        groupadd -g 1006 cvmip &&
+        useradd -m -d /workspace -s /bin/bash -u 1006 -g cvmip cvmip &&
+        chmod 777 /workspace &&
+        nvidia-smi &&
+        apt update -y &&
+        apt install git -y && 
+        runuser -u cvmip -- git clone https://github.com/thankyouflow/lawsuitLLM.git llm &&
+        cd llm &&
+        pip install -r requirements.txt &&
+        runuser -u cvmip python ./test.py
+    securityContext:
+      allowPrivilegeEscalation: false
+
+    resources:
+      requests:
+        nvidia.com/gpu: 1
+      limits:
+        nvidia.com/gpu: 1

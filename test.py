@@ -1,7 +1,20 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextStreamer
-from peft import PeftModel, PeftConfig
+from peft import PeftModel
 import torch
+import time
 
+# CUDA 사용 가능 여부 확인
+cuda_available = torch.cuda.is_available()
+
+print(f"CUDA Available: {cuda_available}")
+
+# 사용 가능한 GPU 개수와 각 GPU 정보 출력
+if cuda_available:
+    num_gpus = torch.cuda.device_count()
+    print(f"Number of GPUs Available: {num_gpus}")
+    for i in range(num_gpus):
+        print(f"GPU {i}: Name: {torch.cuda.get_device_name(i)}")
+time.sleep(1000)
 def stream(user_prompt):
     runtimeFlag = "cuda:0"
     # system_prompt = 'The conversation between Human and AI assisatance named Gathnex\n'
@@ -23,7 +36,6 @@ def stream(user_prompt):
     print(f"질문:", question.replace("[INST]", "").strip())
     print("\n답변:", answer.strip())
 
-base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 
 model = AutoModelForCausalLM.from_pretrained(
     "maywell/Synatra-7B-v0.3-dpo", low_cpu_mem_usage=True,
@@ -31,10 +43,12 @@ model = AutoModelForCausalLM.from_pretrained(
     device_map= {"": 0})
 
 # LORA로 미세조정한 모델을 로드합니다.
-new_model = "/data/llm/lawsuit-7B-easylaw_kr-e3"
-model = PeftModel.from_pretrained(model, new_model)
+# new_model = "/data/llm/lawsuit-7B-easylaw_kr-e3"
+# new_model = r"D:\lawsuit-7B-easylaw_kr-e3"
+# model = PeftModel.from_pretrained(model, new_model)
 
-tokenizer = AutoTokenizer.from_pretrained("/data/llm/Synatra-7B-v0.3-dpo")
+# tokenizer = AutoTokenizer.from_pretrained("/data/llm/Synatra-7B-v0.3-dpo")
+tokenizer = AutoTokenizer.from_pretrained("maywell/Synatra-7B-v0.3-dpo")
 
 stream("신호를 어겨서 벌점을 받았는데 이거는 평생가는거야?")
 
