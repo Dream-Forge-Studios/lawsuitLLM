@@ -13,7 +13,7 @@ dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/da
 dataset = load_dataset(dataset_name, split="train")
 
 # '민사' 사건 중 '임금'만 포함된 데이터 필터링
-civil_cases_with_wage = dataset.filter(lambda x: x['사건종류명'] == '민사' and '임금' in x['사건명'])
+civil_cases_with_wage = dataset.filter(lambda x: x['사건종류명'] == '민사' and x['사건명'] is not None and '임금' in x['사건명'])
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
