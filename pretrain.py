@@ -4,7 +4,7 @@ import os, torch, wandb, platform, warnings
 from datasets import load_dataset
 import re
 
-base_model = "/data/llm/Synatra-7B-v0.3-dpo"
+base_model = "maywell/Synatra-7B-v0.3-dpo"
 dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-wage-a"
 
 test_case_file = "/data/llm/test_case_numbers.txt"
@@ -56,8 +56,8 @@ dataset = load_dataset(dataset_name, split="train")
 # '민사' 사건 중 '임금'만 포함된 데이터 필터링하면서 테스트 케이스 제외
 civil_cases_with_wage_excluded = dataset.filter(
     lambda x: x['사건종류명'] == '민사' and
-              x['사건명'] is not None and
-              '임금' in x['사건명'] and
+              # x['사건명'] is not None and
+              # '임금' in x['사건명'] and
               x['판례정보일련번호'] not in test_case_numbers
 )
 
