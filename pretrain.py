@@ -4,6 +4,10 @@ import os, torch, wandb, platform, warnings
 from datasets import load_dataset
 import re
 
+base_model = "/data/llm/Synatra-7B-v0.3-dpo"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-wage-a"
+
+test_case_file = "/data/llm/test_case_numbers.txt"
 def format_date(numeric_date):
     # 숫자 형식의 날짜를 문자열로 변환
     str_date = str(numeric_date)
@@ -42,11 +46,6 @@ def preprocess_data(examples):
 
     return {'input_text': combined_text}
 
-base_model = "/data/llm/Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-wage-a"
-
-test_case_file = "/data/llm/test_case_numbers.txt"
-
 # 파일에서 판례정보일련번호 목록 로드
 with open(test_case_file, 'r') as f:
     test_case_numbers = [line.strip() for line in f.readlines()]
@@ -65,7 +64,6 @@ civil_cases_with_wage_excluded = dataset.filter(
 # 원본 데이터셋에 전처리 함수 적용
 processed_dataset = civil_cases_with_wage_excluded.map(preprocess_data)
 
-# processed_dataset에는 이미 'input_text'가 추가되어 있음
 # 원본 데이터셋의 다른 열을 제거하고 'input_text'만 남깁니다.
 final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
 
