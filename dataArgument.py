@@ -17,6 +17,7 @@ def preprocess_data(examples):
     precedents = examples['참조판례'] if examples['참조판례'] is not None else ""
     decision = examples['판시사항'] if examples['판시사항'] is not None else ""
     summary = examples['판결요지'] if examples['판결요지'] is not None else ""
+    reason = examples['전문'] if examples['전문'] is not None else ""
 
     if precedents:
         precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
@@ -24,7 +25,7 @@ def preprocess_data(examples):
         precedents += examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples[
             '사건번호'] + " " + '판결'
 
-    split_text = re.split("【이\s*유】", examples['전문'], maxsplit=1)
+    split_text = re.split("【이\s*유】", reason, maxsplit=1)
     # 분할된 결과 확인 및 처리
     if len(split_text) > 1:
         reason_text = split_text[1]
@@ -50,9 +51,9 @@ dataset = load_dataset('joonhok-exo-ai/korean_law_open_data_precedents', cache_d
 # dataset = load_dataset(dataset_name, split="train")
 
 civil_cases_with_wage_excluded = dataset.filter(
-    lambda x: x['사건종류명'] == '민사' and
-              x['사건명'] is not None and
-              '임금' in x['사건명']
+    lambda x: x['사건종류명'] == '민사'
+              # x['사건명'] is not None and
+              # '임금' in x['사건명']
 )
 
 # 원본 데이터셋에 전처리 함수 적용

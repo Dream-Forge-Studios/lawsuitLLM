@@ -23,6 +23,7 @@ def preprocess_data(examples):
     precedents = examples['참조판례'] if examples['참조판례'] is not None else ""
     decision = examples['판시사항'] if examples['판시사항'] is not None else ""
     summary = examples['판결요지'] if examples['판결요지'] is not None else ""
+    reason = examples['전문'] if examples['전문'] is not None else ""
 
     if precedents:
         precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
@@ -195,7 +196,7 @@ trainer = Trainer(
         eval_dataset=None,
         args=training_arguments_a,
         data_collator=DataCollatorForLanguageModeling(
-            tokenizer, mlm=False,  pad_to_multiple_of=8, return_tensors="pt", padding=True
+            tokenizer, mlm=False,  pad_to_multiple_of=8, return_tensors="pt"
         ),
     )
 
