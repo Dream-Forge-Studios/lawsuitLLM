@@ -1,5 +1,5 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig,DataCollatorForLanguageModeling,TrainingArguments, Trainer
-from peft import LoraConfig, PeftModel, prepare_model_for_kbit_training, get_peft_model
+from peft import LoraConfig, PeftModel, prepare_model_for_kbit_training, get_peft_model, prepare_model_for_int8_training
 import os, torch, wandb, platform, warnings
 from datasets import load_dataset
 import re
@@ -148,7 +148,7 @@ with open('/data/llm/wandbKey_js.txt', 'r') as file:
 wandb.login(key = wandb_key)
 run = wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training", anonymous="allow")
 
-model = prepare_model_for_kbit_training(model)
+model = prepare_model_for_int8_training(model)
 peft_config = LoraConfig(
         r=16,
         lora_alpha=16,
