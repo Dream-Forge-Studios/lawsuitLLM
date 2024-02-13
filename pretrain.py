@@ -5,7 +5,7 @@ from datasets import load_dataset
 import re
 
 base_model = "maywell/Synatra-7B-v0.3-dpo"
-base_model = "/data/llm/Synatra-7B-v0.3-dpo"
+# base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
 dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-wage-a"
 
