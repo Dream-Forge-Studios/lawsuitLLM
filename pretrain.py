@@ -40,12 +40,6 @@ def tokenize_and_prepare_for_clm(prompt, add_eos_token=True):
 
     result["labels"] = labels
 
-    # 어텐션 마스크 조정이 필요할 수 있음
-    # EOS 토큰을 추가한 경우 어텐션 마스크 업데이트
-    if add_eos_token and (result["input_ids"][0, -1] != tokenizer.eos_token_id):
-        result["input_ids"][0, -1] = tokenizer.eos_token_id  # 마지막 위치에 EOS 토큰 설정
-        result["attention_mask"][0, -1] = 1  # EOS 토큰에 대한 어텐션 마스크 업데이트
-
     return result
 
 def generate_and_tokenize_prompt(data_point):

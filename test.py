@@ -38,3 +38,47 @@ tokenizer = AutoTokenizer.from_pretrained("maywell/Synatra-7B-v0.3-dpo")
 
 stream("신호를 어겨서 벌점을 받았는데 이거는 평생가는거야?")
 
+# class BankAccount:
+#     def __init__(self, account: str):
+#         self.money = 0
+#         try:
+#             if len(self.account) != 6:
+#                 raise Exception('올바른 계좌번호를 입력하세요.')
+#             else:
+#                 self.account = account
+#         except Exception as e:
+#             print(e)
+#     def deposit(self, money: int):
+#         try:
+#             if money < 0:
+#                 raise Exception('음수값은 처리될 수 없습니다. 다시 시도해주세요.')
+#             else:
+#                 self.money += money
+#         except Exception as e:
+#             print(e)
+#
+#     def withdraw(self, money: int):
+#         try:
+#             if self.money < money:
+#                 raise Exception('잔액이 충분하지 않습니다. 확인 후 다시 시도해주세요.')
+#             else:
+#                 self.money -= money
+#         except Exception as e:
+#             print(e)
+#
+# def transfer(a: BankAccount, b: BankAccount, money):
+#     a.withdraw(money)
+#     b.deposit(money)
+#
+# def transaction_processing(account, data):
+#     for key, value in account.items():
+#         if data[0] == 'deposit':
+#             value(key)
+#             value.deposit(data[1])
+#         elif data[0] == 'withdraw':
+#             value(key)
+#             value.withdraw(data[1])
+#         elif data[0] == 'transfer':
+#             a = value(key)
+#             b = BankAccount(data[1])
+#             transfer(a, b, data[2])
