@@ -3,6 +3,8 @@ from peft import LoraConfig, PeftModel, prepare_model_for_kbit_training, get_pef
 import os, torch, wandb, platform, warnings
 from datasets import load_dataset
 import re
+import torch
+import logging
 
 base_model = "maywell/Synatra-7B-v0.3-dpo"
 # base_model = "/data/llm/Synatra-7B-v0.3-dpo"
@@ -244,6 +246,15 @@ trainer = Trainer(
             tokenizer, mlm=False,  pad_to_multiple_of=8, return_tensors="pt"
         ),
     )
+
+# 로거 설정
+logger = logging.getLogger(__name__)
+
+# 사용 가능한 GPU 개수 확인
+num_gpus = torch.cuda.device_count()
+
+# 사용 가능한 GPU 개수 로깅
+logger.info(f"Using {num_gpus} GPUs for training.")
 
 trainer.train()
 model.config.use_cache = False
