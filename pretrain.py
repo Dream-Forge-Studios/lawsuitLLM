@@ -20,36 +20,6 @@ test_case_file = "/data/llm/test_case_numbers.txt"
 
 cutoff_len = 4096
 
-
-def tokenize_and_prepare_for_clm(prompt, add_eos_token=True):
-    # 토큰화 및 필요한 경우 EOS 토큰 추가
-    result = tokenizer(
-        prompt,
-        truncation=True,
-        max_length=cutoff_len,
-        padding=True,
-        return_tensors='pt',
-    )
-
-    if add_eos_token:
-        # 각 시퀀스의 끝에 eos_token_id 추가
-        eos_token_id = tokenizer.eos_token_id
-        result["input_ids"] = torch.cat([
-            result["input_ids"],
-            torch.full((result["input_ids"].shape[0], 1), eos_token_id, dtype=torch.long)
-        ], dim=1)
-
-    return result
-
-def generate_and_tokenize_prompt(data_point):
-    # 입력("input") 없이 "instruction"만 사용하여 프롬프트 생성
-    prompt = data_point["input_text"]
-
-    # 생성된 프롬프트를 토큰화
-    tokenized_prompt = tokenize_and_prepare_for_clm(prompt, add_eos_token=True)
-
-    return tokenized_prompt
-
 def format_date(numeric_date):
     # 숫자 형식의 날짜를 문자열로 변환
     str_date = str(numeric_date)
@@ -139,7 +109,12 @@ processed_dataset = civil_cases_with_wage_excluded.map(preprocess_data)
 # 원본 데이터셋의 다른 열을 제거하고 'input_text'만 남깁니다.
 final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
 
-train_data = final_dataset.map(generate_and_tokenize_prompt)
+# 데이터셋 토큰화 함수
+def tokenize_function(examples):
+    return tokenizer(examples['input_text'], truncation=True, padding=True, max_length=cutoff_len)
+
+# 데이터셋 토큰화 적용
+tokenized_dataset = final_dataset.map(tokenize_function, batched=True)
 
 with open('/data/llm/wandbKey_js.txt', 'r') as file:
     wandb_key = file.read().strip()
@@ -236,7 +211,7 @@ def formatting_prompts_func(example):
 
 trainer = Trainer(
         model=model,
-        train_dataset=train_data,
+        train_dataset=tokenized_dataset,
         eval_dataset=None,
         args=training_arguments_a,
         data_collator=DataCollatorForLanguageModeling(
