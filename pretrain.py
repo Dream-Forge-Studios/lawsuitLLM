@@ -8,15 +8,15 @@ import logging
 
 base_model = "maywell/Synatra-7B-v0.3-dpo"
 # base_model = "/data/llm/Synatra-7B-v0.3-dpo"
-base_model = "D:\Synatra-7B-v0.3-dpo"
+# base_model = "D:\Synatra-7B-v0.3-dpo"
 dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-wage-a"
 
 # Loading a Gath_baize dataset
 custom_cache_dir = "/data/huggingface/cache/"
-custom_cache_dir = "D:/huggingface/cache/"
+# custom_cache_dir = "D:/huggingface/cache/"
 
 test_case_file = "/data/llm/test_case_numbers.txt"
-test_case_file = r"D:\lawsuitLLM\test_case_numbers.txt"
+# test_case_file = r"D:\lawsuitLLM\test_case_numbers.txt"
 
 cutoff_len = 4096
 
