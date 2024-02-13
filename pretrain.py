@@ -5,9 +5,52 @@ from datasets import load_dataset
 import re
 
 base_model = "maywell/Synatra-7B-v0.3-dpo"
+base_model = "/data/llm/Synatra-7B-v0.3-dpo"
+# base_model = "D:\Synatra-7B-v0.3-dpo"
 dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-wage-a"
 
+# Loading a Gath_baize dataset
+custom_cache_dir = "/data/huggingface/cache/"
+# custom_cache_dir = "D:/huggingface/cache/"
+
 test_case_file = "/data/llm/test_case_numbers.txt"
+# test_case_file = r"D:\lawsuitLLM\test_case_numbers.txt"
+
+cutoff_len = 4096
+
+def tokenize(prompt, add_eos_token=True):
+    result = tokenizer(
+        prompt,
+        #토큰화된 시퀀스의 길이가 cutoff_len을 초과할 경우 잘라내어 길이를 제한
+        truncation=True,
+        max_length=cutoff_len,
+        padding=False,
+        # 반환되는 토큰 ID와 어텐션 마스크가 텐서 형태가 아닌 일반 파이썬 리스트로 반환
+        return_tensors=None,
+    )
+
+    if (
+        result["input_ids"][-1] != tokenizer.eos_token_id
+        and len(result["input_ids"]) < cutoff_len
+        and add_eos_token
+    ):
+
+        result["input_ids"].append(tokenizer.eos_token_id)
+        result["attention_mask"].append(1)
+
+    result["labels"] = result["input_ids"].copy()
+
+    return result
+
+def generate_and_tokenize_prompt(data_point):
+    # 입력("input") 없이 "instruction"만 사용하여 프롬프트 생성
+    prompt = data_point["input_text"]
+
+    # 생성된 프롬프트를 토큰화
+    tokenized_prompt = tokenize(prompt, add_eos_token=True)
+
+    return tokenized_prompt
+
 def format_date(numeric_date):
     # 숫자 형식의 날짜를 문자열로 변환
     str_date = str(numeric_date)
@@ -51,24 +94,6 @@ def preprocess_data(examples):
 with open(test_case_file, 'r') as f:
     test_case_numbers = [line.strip() for line in f.readlines()]
 
-# Loading a Gath_baize dataset
-custom_cache_dir = "/data/huggingface/cache/"
-dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train")
-
-# '민사' 사건 중 '임금'만 포함된 데이터 필터링하면서 테스트 케이스 제외
-civil_cases_with_wage_excluded = dataset.filter(
-    lambda x: x['사건종류명'] == '민사' and
-              x['사건명'] is not None and
-              '임금' in x['사건명'] and
-              x['판례정보일련번호'] not in test_case_numbers
-)
-
-# 원본 데이터셋에 전처리 함수 적용
-processed_dataset = civil_cases_with_wage_excluded.map(preprocess_data)
-
-# 원본 데이터셋의 다른 열을 제거하고 'input_text'만 남깁니다.
-final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
-
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 # Load base model(Mistral 7B)
@@ -88,6 +113,9 @@ model = AutoModelForCausalLM.from_pretrained(
 model.config.use_cache = False # silence the warnings. Please re-enable for inference!
 model.config.pretraining_tp = 1
 
+print(model)
+print(type(model)) # 모델의 타입 확인
+
 # 그래디언트 체크포인팅 활성화
 # model.gradient_checkpointing_enable()
 
@@ -97,6 +125,25 @@ tokenizer.padding_side = 'right'
 tokenizer.pad_token = tokenizer.eos_token
 tokenizer.add_eos_token = True
 tokenizer.add_bos_token, tokenizer.add_eos_token
+
+
+dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train")
+
+# '민사' 사건 중 '임금'만 포함된 데이터 필터링하면서 테스트 케이스 제외
+civil_cases_with_wage_excluded = dataset.filter(
+    lambda x: x['사건종류명'] == '민사' and
+              x['사건명'] is not None and
+              '임금' in x['사건명'] and
+              x['판례정보일련번호'] not in test_case_numbers
+)
+
+# 원본 데이터셋에 전처리 함수 적용
+processed_dataset = civil_cases_with_wage_excluded.map(preprocess_data)
+
+# 원본 데이터셋의 다른 열을 제거하고 'input_text'만 남깁니다.
+final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
+
+train_data = final_dataset.map(generate_and_tokenize_prompt)
 
 with open('/data/llm/wandbKey_js.txt', 'r') as file:
     wandb_key = file.read().strip()
