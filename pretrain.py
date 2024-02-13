@@ -113,9 +113,6 @@ model = AutoModelForCausalLM.from_pretrained(
 model.config.use_cache = False # silence the warnings. Please re-enable for inference!
 model.config.pretraining_tp = 1
 
-print(model)
-print(type(model)) # 모델의 타입 확인
-
 # 그래디언트 체크포인팅 활성화
 # model.gradient_checkpointing_enable()
 
@@ -240,7 +237,7 @@ def formatting_prompts_func(example):
 
 trainer = Trainer(
         model=model,
-        train_dataset=final_dataset,
+        train_dataset=train_data,
         eval_dataset=None,
         args=training_arguments_a,
         data_collator=DataCollatorForLanguageModeling(
