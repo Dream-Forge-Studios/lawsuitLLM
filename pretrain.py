@@ -31,14 +31,13 @@ def tokenize_and_prepare_for_clm(prompt, add_eos_token=True):
         return_tensors='pt',
     )
 
-    # CLM을 위한 레이블 생성
-    # 입력 시퀀스를 한 위치 오른쪽으로 이동하여 다음 토큰을 예측하도록 설정
-    labels = result["input_ids"].roll(shifts=-1, dims=1)
-
-    # 마지막 토큰에 대한 레이블을 -100으로 설정하여 모델이 이를 무시하도록 함
-    labels[:, -1] = -100
-
-    result["labels"] = labels
+    if add_eos_token:
+        # 각 시퀀스의 끝에 eos_token_id 추가
+        eos_token_id = tokenizer.eos_token_id
+        result["input_ids"] = torch.cat([
+            result["input_ids"],
+            torch.full((result["input_ids"].shape[0], 1), eos_token_id, dtype=torch.long)
+        ], dim=1)
 
     return result
 
