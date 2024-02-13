@@ -20,27 +20,31 @@ test_case_file = "/data/llm/test_case_numbers.txt"
 
 cutoff_len = 4096
 
-def tokenize(prompt, add_eos_token=True):
+
+def tokenize_and_prepare_for_clm(prompt, add_eos_token=True):
+    # 토큰화 및 필요한 경우 EOS 토큰 추가
     result = tokenizer(
         prompt,
-        #토큰화된 시퀀스의 길이가 cutoff_len을 초과할 경우 잘라내어 길이를 제한
         truncation=True,
         max_length=cutoff_len,
-        padding=False,
-        # 반환되는 토큰 ID와 어텐션 마스크가 텐서 형태가 아닌 일반 파이썬 리스트로 반환
-        return_tensors=None,
+        padding='max_length',
+        return_tensors='pt',  # PyTorch 텐서로 반환
     )
 
-    if (
-        result["input_ids"][-1] != tokenizer.eos_token_id
-        and len(result["input_ids"]) < cutoff_len
-        and add_eos_token
-    ):
+    # CLM을 위한 레이블 생성
+    # 입력 시퀀스를 한 위치 오른쪽으로 이동하여 다음 토큰을 예측하도록 설정
+    labels = result["input_ids"].roll(shifts=-1, dims=1)
 
-        result["input_ids"].append(tokenizer.eos_token_id)
-        result["attention_mask"].append(1)
+    # 마지막 토큰에 대한 레이블을 -100으로 설정하여 모델이 이를 무시하도록 함
+    labels[:, -1] = -100
 
-    result["labels"] = result["input_ids"].copy()
+    result["labels"] = labels
+
+    # 어텐션 마스크 조정이 필요할 수 있음
+    # EOS 토큰을 추가한 경우 어텐션 마스크 업데이트
+    if add_eos_token and (result["input_ids"][0, -1] != tokenizer.eos_token_id):
+        result["input_ids"][0, -1] = tokenizer.eos_token_id  # 마지막 위치에 EOS 토큰 설정
+        result["attention_mask"][0, -1] = 1  # EOS 토큰에 대한 어텐션 마스크 업데이트
 
     return result
 
@@ -49,7 +53,7 @@ def generate_and_tokenize_prompt(data_point):
     prompt = data_point["input_text"]
 
     # 생성된 프롬프트를 토큰화
-    tokenized_prompt = tokenize(prompt, add_eos_token=True)
+    tokenized_prompt = tokenize_and_prepare_for_clm(prompt, add_eos_token=True)
 
     return tokenized_prompt
 
