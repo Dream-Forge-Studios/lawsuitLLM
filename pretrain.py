@@ -27,7 +27,7 @@ def tokenize_and_prepare_for_clm(prompt, add_eos_token=True):
         prompt,
         truncation=True,
         max_length=cutoff_len,
-        padding=False,
+        padding=True,
         return_tensors='pt',
     )
 
