@@ -35,25 +35,39 @@ def preprocess_data(examples):
     precedents = examples['참조판례'] if examples['참조판례'] is not None else ""
     decision = examples['판시사항'] if examples['판시사항'] is not None else ""
     summary = examples['판결요지'] if examples['판결요지'] is not None else ""
+    reason = examples['전문'] if examples['전문'] is not None else ""
+
+    combined_parts = []
+
+    if decision:
+        combined_parts.append(f'판시사항: {decision}')
+    if summary:
+        combined_parts.append(f'판결요지: {summary}')
+    if laws:
+        combined_parts.append(f'참조조문: {laws}')
 
     if precedents:
         precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
     else:
         precedents += examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples[
             '사건번호'] + " " + '판결'
+    combined_parts.append(f'참조판례: {precedents}')
 
-    split_text = re.split("【이\s*유】", examples['전문'], maxsplit=1)
-    # 분할된 결과 확인 및 처리
-    if len(split_text) > 1:
-        reason_text = split_text[1]
-    else:
-        reason_text = split_text[0]
+    if isinstance(reason, str):
+        split_text = re.split("【이\s*유】", examples['전문'], maxsplit=1)
+        # 분할된 결과 확인 및 처리
+        if len(split_text) > 1:
+            reason_text = split_text[1]
+        else:
+            reason_text = split_text[0]
 
-    final_text = re.split("대법원\s+|판사\s+|대법원판사\s+|대법관\s+", reason_text, maxsplit=1)
-    final_text = final_text[0]
+        final_text = re.split("대법원\s+|판사\s+|대법원판사\s+|대법관\s+", reason_text, maxsplit=1)
+        final_text = final_text[0] if final_text else ""
+        if final_text:
+            combined_parts.append(f'이유: {final_text}')
 
 
-    combined_text = '판시사항: ' + decision + "\n" + '판결요지: ' + summary + "\n" + '참조조문: ' + laws + '\n' + '참조판례: ' + precedents + '\n' + '이유: ' + final_text
+    combined_text = "\n".join(combined_parts)
 
     return {'input_text': combined_text}
 
