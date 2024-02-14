@@ -9,7 +9,7 @@ import logging
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-wage-f"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-f"
 
 # Loading a Gath_baize dataset
 custom_cache_dir = "/data/huggingface/cache/"
@@ -90,13 +90,13 @@ tokenizer.add_eos_token = True
 tokenizer.add_bos_token, tokenizer.add_eos_token
 
 
-dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train")
+dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train").shuffle()
 
 # '민사' 사건 중 '임금'만 포함된 데이터 필터링하면서 테스트 케이스 제외
 civil_cases_with_wage_excluded = dataset.filter(
     lambda x: x['사건종류명'] == '민사' and
               x['사건명'] is not None and
-              '임금' in x['사건명'] and
+              # '임금' in x['사건명'] and
               # str(x['판례정보일련번호']) in test_case_numbers
               str(x['판례정보일련번호']) not in test_case_numbers
 )
