@@ -6,8 +6,8 @@ import re
 import torch
 import logging
 
-base_model = "maywell/Synatra-7B-v0.3-dpo"
-# base_model = "/data/llm/Synatra-7B-v0.3-dpo"
+# base_model = "maywell/Synatra-7B-v0.3-dpo"
+base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
 dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-wage-f"
 
@@ -16,7 +16,7 @@ custom_cache_dir = "/data/huggingface/cache/"
 # custom_cache_dir = "D:/huggingface/cache/"
 
 test_case_file = "/data/llm/test_case_numbers.txt"
-# test_case_file = r"D:\lawsuitLLM\test_case_numbers.txt"
+# test_case_file = r"D:\test_case_numbers.txt"
 
 cutoff_len = 4096
 
@@ -35,7 +35,6 @@ def preprocess_data(examples):
     precedents = examples['참조판례'] if examples['참조판례'] is not None else ""
     decision = examples['판시사항'] if examples['판시사항'] is not None else ""
     summary = examples['판결요지'] if examples['판결요지'] is not None else ""
-    reason = examples['전문'] if examples['전문'] is not None else ""
 
     if precedents:
         precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
@@ -50,7 +49,6 @@ def preprocess_data(examples):
     else:
         reason_text = split_text[0]
 
-    # final_text = re.split("대법원\s*(.+?)\(재판장\)|판사\s*(.+?)\(재판장\)|대법원판사\s*(.+?)\(재판장\)|대법관\s*(.+?)\(재판장\)", reason_text, maxsplit=1)
     final_text = re.split("대법원\s+|판사\s+|대법원판사\s+|대법관\s+", reason_text, maxsplit=1)
     final_text = final_text[0]
 
@@ -65,7 +63,6 @@ with open(test_case_file, 'r') as f:
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
-# Load base model(Mistral 7B)
 bnb_config = BitsAndBytesConfig(
     load_in_4bit= True,
     bnb_4bit_quant_type= "nf4",
@@ -100,7 +97,8 @@ civil_cases_with_wage_excluded = dataset.filter(
     lambda x: x['사건종류명'] == '민사' and
               x['사건명'] is not None and
               '임금' in x['사건명'] and
-              x['판례정보일련번호'] not in test_case_numbers
+              # str(x['판례정보일련번호']) in test_case_numbers
+              str(x['판례정보일련번호']) not in test_case_numbers
 )
 
 # 원본 데이터셋에 전처리 함수 적용

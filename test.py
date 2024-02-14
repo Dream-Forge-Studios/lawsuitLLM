@@ -1,6 +1,10 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer, TextStreamer
+# -*- coding: utf-8 -*-
+from transformers import AutoModelForCausalLM, AutoTokenizer, TextStreamer, BitsAndBytesConfig
 from peft import PeftModel
 import torch
+
+base_model = "/data/Synatra-7B-v0.3-dpo"
+base_model = r"D:\Synatra-7B-v0.3-dpo"
 def stream(user_prompt):
     runtimeFlag = "cuda:0"
     # system_prompt = 'The conversation between Human and AI assisatance named Gathnex\n'
@@ -16,6 +20,7 @@ def stream(user_prompt):
     generated_ids = model.generate(**inputs, streamer=streamer, max_new_tokens=4096)
 
     decoded = tokenizer.batch_decode(generated_ids)
+    print(decoded)
     # 질문과 답변 분리
     question, answer = decoded[0].split("[/INST]")
 
@@ -23,25 +28,40 @@ def stream(user_prompt):
     print("\n답변:", answer.strip())
 
 
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit= True,
+    bnb_4bit_quant_type= "nf4",
+    bnb_4bit_compute_dtype= torch.bfloat16,
+    bnb_4bit_use_double_quant= False,
+)
+
+# model = AutoModelForCausalLM.from_pretrained(
+#     basemodel, low_cpu_mem_usage=True,
+#     return_dict=True,torch_dtype=torch.bfloat16,
+#     device_map= {"": 0})
+
 model = AutoModelForCausalLM.from_pretrained(
-    "/data/Synatra-7B-v0.3-dpo", low_cpu_mem_usage=True,
-    return_dict=True,torch_dtype=torch.bfloat16,
-    device_map= {"": 0})
+    base_model,
+    quantization_config=bnb_config,
+    device_map="auto"
+)
 
 # LORA로 미세조정한 모델을 로드합니다.
-new_model = "/data/llm/lawsuit-7B-civil-wage-a"
-# new_model = r"D:\lawsuit-7B-easylaw_kr-e3"
+new_model = "/data/llm/lawsuit-7B-civil-wage-f"
+new_model = r"D:\lawsuit-7B-civil-wage-f"
 model = PeftModel.from_pretrained(model, new_model)
 
-# tokenizer = AutoTokenizer.from_pretrained("/data/llm/Synatra-7B-v0.3-dpo")
-tokenizer = AutoTokenizer.from_pretrained("/data/Synatra-7B-v0.3-dpo")
+tokenizer = AutoTokenizer.from_pretrained(base_model)
 
-stream("판결 요지: '지방자치단체의 장의 보조기관인 건설과장의 요청에 의하여 노무자가 일정한 노무를 제공한 경우, 이 계약의 체결이 위 과장의 권한에 속하는 한 이는 유효하게 성립한 것으로 위 과장이 노무자를 고용함에 있어서 행정상의 내부적인 절차를 경유하지 않았다고 할지라도 그것은 행정상의 내부관계에 불과하여 이로써 위 노무계약이 위법이거나 무효라고 단정할 수 없다.' "
-       "참조 조문: 민법 제655조 "
-       "판결 요지: '근로자가 유급휴일에 근로한 경우에는 유급으로서 당연히 지급되는 임금과 그 유급휴일의 근로에 대한 소정의 통상임금을 포함한 임금을 지급하여야 된다.' "
-       "참조 조문: 근로기준법 제47조 "
-       "판결 요지: '피고회사가 근로자들을 월남국으로 파병시킬 당시 미국인회사로부터 앞으로 일년간 공사시공을 함에 상당한 하도급을 받았으나 그 후의 사정변경으로 하도급받은 작업량이 줄어들게 되었다는 사실로써는 민법 제661조나 본조 제1항 단서 소정 부득이한 사유라 할 수 없으므로 해고기간의 정함이 있는 위 근로자들과의 본건 해고계약은 30일 전의 예고로도 해지시킬 수 없다.' "
-       "참조 조문:")
+stream("'지방자치단체의 장의 보조기관인 건설과장의 요청에 의하여 노무자가 일정한 노무를 제공한 경우, 이 계약의 체결이 위 과장의 권한에 속하는 한 이는 유효하게 성립한 것으로 위 과장이 노무자를 고용함에 있어서 행정상의 내부적인 절차를 경유하지 않았다고 할지라도 그것은 행정상의 내부관계에 불과하여 이로써 위 노무계약이 위법이거나 무효라고 단정할 수 없다.' "
+       "와 관련된 법은 민법 제655조 "
+       "'피고회사가 근로자들을 월남국으로 파병시킬 당시 미국인회사로부터 앞으로 일년간 공사시공을 함에 상당한 하도급을 받았으나 그 후의 사정변경으로 하도급받은 작업량이 줄어들게 되었다는 사실로써는 민법 제661조나 본조 제1항 단서 소정 부득이한 사유라 할 수 없으므로 해고기간의 정함이 있는 위 근로자들과의 본건 해고계약은 30일 전의 예고로도 해지시킬 수 없다.' "
+       "와 관련된 법은 근로기준법 제127조의2, 제38조, 민법 제661조일 때"
+       "'근로자가 유급휴일에 근로한 경우에는 유급으로서 당연히 지급되는 임금과 그 유급휴일의 근로에 대한 소정의 통상임금을 포함한 임금을 지급하여야 된다.' "
+       "와 관련된 법은?")
+
+# stream("'근로자가 유급휴일에 근로한 경우에는 유급으로서 당연히 지급되는 임금과 그 유급휴일의 근로에 대한 소정의 통상임금을 포함한 임금을 지급하여야 된다.' "
+#        "와 관련된 법은?")
 
 # class BankAccount:
 #     def __init__(self, account: str):
