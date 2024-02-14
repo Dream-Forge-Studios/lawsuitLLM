@@ -9,7 +9,7 @@ import logging
 base_model = "maywell/Synatra-7B-v0.3-dpo"
 # base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-wage-a"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-wage-f"
 
 # Loading a Gath_baize dataset
 custom_cache_dir = "/data/huggingface/cache/"
@@ -158,7 +158,7 @@ training_arguments_a = TrainingArguments(
 training_arguments_f = TrainingArguments(
     output_dir= "./results",
     num_train_epochs= 1,
-    per_device_train_batch_size= 4,
+    per_device_train_batch_size= 1,
     gradient_accumulation_steps= 4,
     optim = "adamw_torch",
     save_steps= 30,
@@ -213,7 +213,7 @@ trainer = Trainer(
         model=model,
         train_dataset=tokenized_dataset,
         eval_dataset=None,
-        args=training_arguments_a,
+        args=training_arguments_f,
         data_collator=DataCollatorForLanguageModeling(
             tokenizer, mlm=False,  pad_to_multiple_of=8, return_tensors="pt"
         ),
