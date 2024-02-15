@@ -9,7 +9,7 @@ import logging
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-f"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-civil-reason-f"
 
 # Loading a Gath_baize dataset
 custom_cache_dir = "/data/huggingface/cache/"
@@ -39,19 +39,19 @@ def preprocess_data(examples):
 
     combined_parts = []
 
-    if decision:
-        combined_parts.append(f'판시사항: {decision}')
-    if summary:
-        combined_parts.append(f'판결요지: {summary}')
-    if laws:
-        combined_parts.append(f'참조조문: {laws}')
-
-    if precedents:
-        precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
-    else:
-        precedents += examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples[
-            '사건번호'] + " " + '판결'
-    combined_parts.append(f'참조판례: {precedents}')
+    # if decision:
+    #     combined_parts.append(f'판시사항: {decision}')
+    # if summary:
+    #     combined_parts.append(f'판결요지: {summary}')
+    # if laws:
+    #     combined_parts.append(f'참조조문: {laws}')
+    #
+    # if precedents:
+    #     precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
+    # else:
+    #     precedents += examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples[
+    #         '사건번호'] + " " + '판결'
+    # combined_parts.append(f'참조판례: {precedents}')
 
     if reason:
         split_text = re.split("【이\s*유】", examples['전문'], maxsplit=1)
@@ -110,10 +110,12 @@ dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train").
 civil_cases_with_wage_excluded = dataset.filter(
     lambda x: x['사건종류명'] == '민사' and
               x['사건명'] is not None and
-              # '임금' in x['사건명'] and
+              '임금' in x['사건명'] and
               # str(x['판례정보일련번호']) in test_case_numbers
               str(x['판례정보일련번호']) not in test_case_numbers
 )
+
+# civil_cases_with_wage_excluded.to_csv('civil_cases_with_wage.csv')
 
 # 원본 데이터셋에 전처리 함수 적용
 processed_dataset = civil_cases_with_wage_excluded.map(preprocess_data)
