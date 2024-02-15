@@ -53,7 +53,7 @@ def preprocess_data(examples):
             '사건번호'] + " " + '판결'
     combined_parts.append(f'참조판례: {precedents}')
 
-    if isinstance(reason, str):
+    if reason:
         split_text = re.split("【이\s*유】", examples['전문'], maxsplit=1)
         # 분할된 결과 확인 및 처리
         if len(split_text) > 1:
