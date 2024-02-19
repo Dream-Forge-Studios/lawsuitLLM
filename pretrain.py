@@ -121,29 +121,29 @@ civil_cases_with_wage_excluded = dataset.filter(
 # civil_cases_with_wage_excluded.to_csv('civil_cases_with_wage.csv')
 
 # '참조조문'에서 법률 이름 추출
-law_references = []
-for reference in civil_cases_with_wage_excluded['참조조문']:
-    if reference:
-        for data in reference.split('/'):
-            for data2 in data.split(','):
-                cleaned_text = re.sub(r"\[\d+\]", "", data2).strip()
-                cleaned_text = re.sub(r"([가-힣]+\.)+", "", cleaned_text).strip()
-                if '법' not in cleaned_text:
-                    cleaned_text = re.findall(r'([가-힣\s]+(?:법|법률))', law_references[-1])[0] + ' ' + cleaned_text
-                elif '같은법시행령' in cleaned_text:
-                    cleaned_text = re.findall(r'([가-힣\s]+(?:법|법률))', law_references[-1])[0] + ' ' + cleaned_text.replace('같은법시행령', '')
-                elif '같은법' in cleaned_text:
-                    cleaned_text = re.findall(r'([가-힣\s]+(?:법|법률))', law_references[-1])[0] + ' ' + cleaned_text.replace('같은법', '')
-                law_references.append(cleaned_text)
-                # 정규 표현식을 사용하여 '___법 ____조' 및 '___법률 ____조' 형식 추출
-                # matches = re.findall(r'([가-힣\s]+(?:법|법률))\s제(\d+조)', cleaned_text)
-                # for match in matches:
-                #     # '법률 이름 제조번호' 형태로 정리
-                #     full_reference = f"{match[0]} 제{match[1]}"
-                #     law_references.append(full_reference)
-
-law_count = Counter(law_references)
-print(law_count)
+# law_references = []
+# for reference in civil_cases_with_wage_excluded['참조조문']:
+#     if reference:
+#         for data in reference.split('/'):
+#             for data2 in data.split(','):
+#                 cleaned_text = re.sub(r"\[\d+\]", "", data2).strip()
+#                 cleaned_text = re.sub(r"([가-힣]+\.)+", "", cleaned_text).strip()
+#                 if '법' not in cleaned_text:
+#                     cleaned_text = re.findall(r'([가-힣\s]+(?:법|법률))', law_references[-1])[0] + ' ' + cleaned_text
+#                 elif '같은법시행령' in cleaned_text:
+#                     cleaned_text = re.findall(r'([가-힣\s]+(?:법|법률))', law_references[-1])[0] + ' ' + cleaned_text.replace('같은법시행령', '')
+#                 elif '같은법' in cleaned_text:
+#                     cleaned_text = re.findall(r'([가-힣\s]+(?:법|법률))', law_references[-1])[0] + ' ' + cleaned_text.replace('같은법', '')
+#                 law_references.append(cleaned_text)
+#                 # 정규 표현식을 사용하여 '___법 ____조' 및 '___법률 ____조' 형식 추출
+#                 # matches = re.findall(r'([가-힣\s]+(?:법|법률))\s제(\d+조)', cleaned_text)
+#                 # for match in matches:
+#                 #     # '법률 이름 제조번호' 형태로 정리
+#                 #     full_reference = f"{match[0]} 제{match[1]}"
+#                 #     law_references.append(full_reference)
+#
+# law_count = Counter(law_references)
+# print(law_count)
 # 원본 데이터셋에 전처리 함수 적용
 processed_dataset = civil_cases_with_wage_excluded.map(preprocess_data)
 
