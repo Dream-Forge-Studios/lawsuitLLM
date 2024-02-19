@@ -10,7 +10,7 @@ from collections import Counter
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage-lawNotNone-a"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage-lawNotNone-oneLaw-a"
 
 # Loading a Gath_baize dataset
 custom_cache_dir = "/data/huggingface/cache/"
@@ -145,7 +145,7 @@ def filter_with_reference(cases, one_laws):
     return filtered_cases
 
 # 최종 필터링된 데이터셋 생성
-# final_filtered_dataset = filter_with_reference(civil_cases_with_wage_excluded, one_laws)
+final_filtered_dataset = filter_with_reference(civil_cases_with_wage_excluded, one_laws)
 
 # civil_cases_with_wage_excluded.to_csv('civil_cases_with_wage.csv')
 
@@ -174,8 +174,10 @@ def filter_with_reference(cases, one_laws):
 #
 # law_count = Counter(law_references)
 # print(law_count)
+
 # 원본 데이터셋에 전처리 함수 적용
-processed_dataset = civil_cases_with_wage_excluded.map(preprocess_data)
+# processed_dataset = civil_cases_with_wage_excluded.map(preprocess_data)
+processed_dataset = list(map(preprocess_data, final_filtered_dataset))
 
 # 원본 데이터셋의 다른 열을 제거하고 'input_text'만 남깁니다.
 final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
