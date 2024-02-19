@@ -105,7 +105,8 @@ tokenizer.add_eos_token = True
 tokenizer.add_bos_token, tokenizer.add_eos_token
 
 
-dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train").shuffle()
+# dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train").shuffle()
+dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train")
 
 # '민사' 사건 중 '임금'만 포함된 데이터 필터링하면서 테스트 케이스 제외
 civil_cases_with_wage_excluded = dataset.filter(
