@@ -11,15 +11,15 @@ from datasets import Dataset
 
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
-# base_model = "D:\Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage-lawNotNone-oneLaw-a"
+base_model = "D:\Synatra-7B-v0.3-dpo"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage-reason-lawNotNone-oneLaw-a"
 
 # Loading a Gath_baize dataset
 custom_cache_dir = "/data/huggingface/cache/"
-# custom_cache_dir = "D:/huggingface/cache/"
+custom_cache_dir = "D:/huggingface/cache/"
 
 test_case_file = "/data/llm/test_case_numbers.txt"
-# test_case_file = r"D:\test_case_numbers.txt"
+test_case_file = r"D:\test_case_numbers.txt"
 
 cutoff_len = 4096
 
@@ -42,19 +42,19 @@ def preprocess_data(examples):
 
     combined_parts = []
 
-    if decision:
-        combined_parts.append(f'판시사항: {decision}')
-    if summary:
-        combined_parts.append(f'판결요지: {summary}')
-    if laws:
-        combined_parts.append(f'참조조문: {laws}')
-
-    if precedents:
-        precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
-    else:
-        precedents += examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples[
-            '사건번호'] + " " + '판결'
-    combined_parts.append(f'참조판례: {precedents}')
+    # if decision:
+    #     combined_parts.append(f'판시사항: {decision}')
+    # if summary:
+    #     combined_parts.append(f'판결요지: {summary}')
+    # if laws:
+    #     combined_parts.append(f'참조조문: {laws}')
+    #
+    # if precedents:
+    #     precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
+    # else:
+    #     precedents += examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples[
+    #         '사건번호'] + " " + '판결'
+    # combined_parts.append(f'참조판례: {precedents}')
 
     if reason:
         split_text = re.split("【이\s*유】", examples['전문'], maxsplit=1)
