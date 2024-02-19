@@ -6,6 +6,8 @@ import re
 import torch
 import logging
 from collections import Counter
+import pandas as pd
+from datasets import Dataset
 
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
@@ -145,14 +147,17 @@ def filter_with_reference(cases, one_laws):
     return filtered_cases
 
 # 최종 필터링된 데이터셋 생성
-final_filtered_dataset = filter_with_reference(civil_cases_with_wage_excluded, one_laws)
+civil_cases_with_wage_excluded = filter_with_reference(civil_cases_with_wage_excluded, one_laws)
+
+df = pd.DataFrame(civil_cases_with_wage_excluded)
+# DataFrame을 Hugging Face의 Dataset 객체로 변환
+civil_cases_with_wage_excluded = Dataset.from_pandas(df)
 
 # civil_cases_with_wage_excluded.to_csv('civil_cases_with_wage.csv')
 
 # '참조조문'에서 법률 이름 추출
 # law_references = []
-# for case in final_filtered_dataset:
-#     references = case['참조조문']
+# for references in civil_cases_with_wage_excluded['참조조문']:
 #     if references:
 #         for reference in references.split('/'):
 #             for data in reference.split(','):
@@ -176,8 +181,8 @@ final_filtered_dataset = filter_with_reference(civil_cases_with_wage_excluded, o
 # print(law_count)
 
 # 원본 데이터셋에 전처리 함수 적용
-# processed_dataset = civil_cases_with_wage_excluded.map(preprocess_data)
-processed_dataset = list(map(preprocess_data, final_filtered_dataset))
+processed_dataset = civil_cases_with_wage_excluded.map(preprocess_data)
+# processed_dataset = list(map(preprocess_data, final_filtered_dataset))
 
 # 원본 데이터셋의 다른 열을 제거하고 'input_text'만 남깁니다.
 final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
