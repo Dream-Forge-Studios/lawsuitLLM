@@ -51,4 +51,4 @@ def sample_selcet(input_file, out_file, num):
         for number in random_selected_numbers:
             f.write("%s\n" % number)
 
-sample_selcet("not_with_wage_case_numbers_300.txt", "not_with_wage_case_numbers_100.txt",100)
+# sample_selcet("not_with_wage_case_numbers_300.txt", "not_with_wage_case_numbers_100.txt",100)
