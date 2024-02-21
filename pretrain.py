@@ -1,7 +1,7 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig,DataCollatorForLanguageModeling,TrainingArguments, Trainer
 from peft import LoraConfig, PeftModel, prepare_model_for_kbit_training, get_peft_model
 import os, torch, wandb, platform, warnings
-from datasets import load_dataset
+from datasets import load_dataset, concatenate_datasets
 import re
 import torch
 import logging
@@ -14,13 +14,13 @@ from datasets import Dataset
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage-reverse-a"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage-500-a"
 
 # Loading a Gath_baize dataset
 custom_cache_dir = "/data/huggingface/cache/"
 # custom_cache_dir = "D:/huggingface/cache/"
 
-test_case_file = "/data/llm/test_case_numbers.txt"
+test_case_file = "/data/llm/not_with_wage_case_numbers_500.txt"
 # test_case_file = r"D:\test_case_numbers.txt"
 
 cutoff_len = 4096
@@ -44,19 +44,19 @@ def preprocess_data(examples):
 
     combined_parts = []
 
-    # if decision:
-    #     combined_parts.append(f'판시사항: {decision}')
-    # if summary:
-    #     combined_parts.append(f'판결요지: {summary}')
-    # if laws:
-    #     combined_parts.append(f'참조조문: {laws}')
-    #
-    # if precedents:
-    #     precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
-    # else:
-    #     precedents += examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples[
-    #         '사건번호'] + " " + '판결'
-    # combined_parts.append(f'참조판례: {precedents}')
+    if decision:
+        combined_parts.append(f'판시사항: {decision}')
+    if summary:
+        combined_parts.append(f'판결요지: {summary}')
+    if laws:
+        combined_parts.append(f'참조조문: {laws}')
+
+    if precedents:
+        precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
+    else:
+        precedents += examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples[
+            '사건번호'] + " " + '판결'
+    combined_parts.append(f'참조판례: {precedents}')
 
     if reason:
         split_text = re.split("【이\s*유】", examples['전문'], maxsplit=1)
@@ -71,19 +71,19 @@ def preprocess_data(examples):
         if final_text:
             combined_parts.append(f'이유: {final_text}')
 
-    if decision:
-        combined_parts.append(f'판시사항: {decision}')
-    if summary:
-        combined_parts.append(f'판결요지: {summary}')
-    if laws:
-        combined_parts.append(f'참조조문: {laws}')
-
-    if precedents:
-        precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
-    else:
-        precedents += examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples[
-            '사건번호'] + " " + '판결'
-    combined_parts.append(f'참조판례: {precedents}')
+    # if decision:
+    #     combined_parts.append(f'판시사항: {decision}')
+    # if summary:
+    #     combined_parts.append(f'판결요지: {summary}')
+    # if laws:
+    #     combined_parts.append(f'참조조문: {laws}')
+    #
+    # if precedents:
+    #     precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
+    # else:
+    #     precedents += examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples[
+    #         '사건번호'] + " " + '판결'
+    # combined_parts.append(f'참조판례: {precedents}')
 
 
     combined_text = "\n".join(combined_parts)
@@ -126,12 +126,29 @@ tokenizer.add_bos_token, tokenizer.add_eos_token
 # dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train").shuffle()
 dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train")
 
+# civil_cases_not_with_wage_excluded = dataset.filter(
+#     lambda x: x['사건종류명'] == '민사' and (x['사건명'] is None or '임금' not in x['사건명'])
+# )
+#
+# # civil_cases_not_with_wage_excluded에서 랜덤으로 100개 샘플 선택
+# random_samples = civil_cases_not_with_wage_excluded.shuffle().select(range(500))
+#
+# # 테스트 데이터의 판례번호를 추출
+# test_case_numbers = random_samples['판례정보일련번호']
+#
+# # 판례번호를 파일에 저장
+# test_case_file = "not_with_wage_case_numbers_500.txt"
+# with open(test_case_file, 'w') as f:
+#     for number in test_case_numbers:
+#         f.write("%s\n" % number)
+
 # '민사' 사건 중 '임금'만 포함된 데이터 필터링하면서 테스트 케이스 제외
 civil_cases_with_wage_excluded = dataset.filter(
     lambda x: x['사건종류명'] == '민사' and
-              x['사건명'] is not None and
-              '임금' in x['사건명']
+              # x['사건명'] is not None and
+              # '임금' in x['사건명']
               # and
+              (str(x['판례정보일련번호']) in test_case_numbers or (x['사건명'] is not None and '임금' in x['사건명']))
               # x['참조조문'] is not None
               # str(x['판례정보일련번호']) in test_case_numbers
               # str(x['판례정보일련번호']) not in test_case_numbers
@@ -144,7 +161,6 @@ civil_cases_with_wage_excluded = dataset.filter(
 
 # 원본 데이터셋에 전처리 함수 적용
 processed_dataset = civil_cases_with_wage_excluded.map(preprocess_data)
-# processed_dataset = list(map(preprocess_data, final_filtered_dataset))
 
 # 원본 데이터셋의 다른 열을 제거하고 'input_text'만 남깁니다.
 final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
