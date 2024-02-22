@@ -5,7 +5,7 @@ from datasets import load_dataset, concatenate_datasets
 import re
 import torch
 import logging
-from utils import filter_with_reference
+from utils import filter_with_reference, precedents_preprocess_data, QA_preprocess_data
 from collections import Counter
 import pandas as pd
 from datasets import Dataset
@@ -14,7 +14,8 @@ from datasets import Dataset
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage-100-random-a"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage-500PRE-300QA-random-a"
+dataset_name2 = 'maywell/ko_wikidata_QA'
 
 # Loading a Gath_baize dataset
 custom_cache_dir = "/data/huggingface/cache/"
@@ -25,70 +26,6 @@ test_case_file = "/data/llm/not_with_wage_case_numbers_100.txt"
 
 cutoff_len = 4096
 
-def format_date(numeric_date):
-    # 숫자 형식의 날짜를 문자열로 변환
-    str_date = str(numeric_date)
-
-    # YYYY-MM-DD 형식으로 변환
-    formatted_date = f"{str_date[:4]}-{str_date[4:6]}-{str_date[6:]}"
-
-    return formatted_date
-
-def preprocess_data(examples):
-    # '참조조문'이 None이면 빈 문자열로 처리
-    laws = examples['참조조문'] if examples['참조조문'] is not None else ""
-    precedents = examples['참조판례'] if examples['참조판례'] is not None else ""
-    decision = examples['판시사항'] if examples['판시사항'] is not None else ""
-    summary = examples['판결요지'] if examples['판결요지'] is not None else ""
-    reason = examples['전문'] if examples['전문'] is not None else ""
-
-    combined_parts = []
-
-    if decision:
-        combined_parts.append(f'판시사항: {decision}')
-    if summary:
-        combined_parts.append(f'판결요지: {summary}')
-    if laws:
-        combined_parts.append(f'참조조문: {laws}')
-
-    if precedents:
-        precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
-    else:
-        precedents += examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples[
-            '사건번호'] + " " + '판결'
-    combined_parts.append(f'참조판례: {precedents}')
-
-    if reason:
-        split_text = re.split("【이\s*유】", examples['전문'], maxsplit=1)
-        # 분할된 결과 확인 및 처리
-        if len(split_text) > 1:
-            reason_text = split_text[1]
-        else:
-            reason_text = split_text[0]
-
-        final_text = re.split("대법원\s+|판사\s+|대법원판사\s+|대법관\s+", reason_text, maxsplit=1)
-        final_text = final_text[0] if final_text else ""
-        if final_text:
-            combined_parts.append(f'이유: {final_text}')
-
-    # if decision:
-    #     combined_parts.append(f'판시사항: {decision}')
-    # if summary:
-    #     combined_parts.append(f'판결요지: {summary}')
-    # if laws:
-    #     combined_parts.append(f'참조조문: {laws}')
-    #
-    # if precedents:
-    #     precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
-    # else:
-    #     precedents += examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples[
-    #         '사건번호'] + " " + '판결'
-    # combined_parts.append(f'참조판례: {precedents}')
-
-
-    combined_text = "\n".join(combined_parts)
-
-    return {'input_text': combined_text}
 
 # 파일에서 판례정보일련번호 목록 로드
 with open(test_case_file, 'r') as f:
@@ -121,7 +58,6 @@ tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
 # tokenizer.pad_token = tokenizer.eos_token
 tokenizer.add_eos_token = True
 tokenizer.add_bos_token, tokenizer.add_eos_token
-
 
 # dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train").shuffle()
 dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train")
@@ -160,11 +96,17 @@ civil_cases_with_wage_excluded = dataset.filter(
 # print(law_count)
 
 # 원본 데이터셋에 전처리 함수 적용
-processed_dataset = civil_cases_with_wage_excluded.map(preprocess_data)
+processed_dataset = civil_cases_with_wage_excluded.map(precedents_preprocess_data)
+
+dataset2 = load_dataset(dataset_name2, cache_dir=custom_cache_dir, split="train")
+random_samples = dataset2.select(range(300))
+
+qa_dataset = random_samples.map(QA_preprocess_data)
+
+combined_dataset = concatenate_datasets([processed_dataset, qa_dataset]).shuffle()
 
 # 원본 데이터셋의 다른 열을 제거하고 'input_text'만 남깁니다.
-final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
-
+final_dataset = combined_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
 # 데이터셋 토큰화 함수
 def tokenize_function(examples):
     return tokenizer(examples['input_text'], truncation=True, padding=True, max_length=cutoff_len)
