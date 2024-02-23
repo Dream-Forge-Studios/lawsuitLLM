@@ -103,7 +103,7 @@ def main(new_model):
 
 
     # JSON 파일 경로
-    file_path = f"{new_model}_decision_results.json"
+    file_path = f"{new_model}_results.json"
 
     # JSON 파일에 데이터 쓰기
     with open(file_path, 'w', encoding='utf-8') as json_file:
