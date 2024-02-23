@@ -14,7 +14,7 @@ from datasets import Dataset
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage-500QA-random-a"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage-ac"
 dataset_name2 = 'maywell/ko_wikidata_QA'
 
 # Loading a Gath_baize dataset
@@ -133,6 +133,26 @@ model = get_peft_model(model, peft_config)
 
 # Training Arguments
 # Hyperparameters should beadjusted based on the hardware you using
+training_arguments_ac = TrainingArguments(
+    output_dir= "./results",
+    num_train_epochs= 1,
+    per_device_train_batch_size= 1,
+    gradient_accumulation_steps= 4,
+    optim = "paged_adamw_8bit",
+    save_steps= 30,
+    logging_steps= 30,
+    learning_rate= 2e-4,
+    weight_decay= 0.001,
+    fp16= False,
+    bf16= False,
+    max_grad_norm= 0.3,
+    max_steps= -1,
+    warmup_ratio= 0.3,
+    group_by_length= True,
+    lr_scheduler_type= "cosine",
+    report_to="wandb"
+)
+
 training_arguments_a = TrainingArguments(
     output_dir= "./results",
     num_train_epochs= 1,
