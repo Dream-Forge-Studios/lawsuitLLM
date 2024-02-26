@@ -115,12 +115,13 @@ def precedents_preprocess_data(examples):
 
     return {'input_text': combined_text}
 
-def QA_preprocess_data(examples):
+def preprocess_data(examples):
     # '참조조문'이 None이면 빈 문자열로 처리
-    instruction = examples['instruction'] if examples['instruction'] is not None else ""
-    output = examples['output'] if examples['output'] is not None else ""
+    # instruction = examples['instruction'] if examples['instruction'] is not None else ""
+    # output = examples['output'] if examples['output'] is not None else ""
+    #
+    # combined_text = f"{instruction}\n".join(output)
 
-    combined_text = f"{instruction}\n".join(output)
-
-    return {'input_text': combined_text}
+    output = examples['text'] if examples['text'] is not None else ""
+    return {'input_text': output}
 # sample_selcet("not_with_wage_case_numbers_300.txt", "not_with_wage_case_numbers_100.txt",100)

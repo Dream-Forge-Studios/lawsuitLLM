@@ -40,6 +40,7 @@ def main(new_model):
         streamer = TextStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
 
         generated_ids = final_model.generate(**inputs, streamer=streamer, max_new_tokens=400)
+        # generated_ids = final_model.generate(**inputs, streamer=streamer, max_new_tokens=4000)
 
         decoded = tokenizer.batch_decode(generated_ids)
 
@@ -98,7 +99,7 @@ def main(new_model):
     for key in testData.keys():
         for prompt in testData[key]:
             # stream("'" + prompt + "'와 관련된 법은?", key)
-            stream("'" + prompt + "'에 대한 법적 판단은?", key)
+            stream("'" + prompt + "'이에 대한 법적 판단은?", key)
 
 
 
