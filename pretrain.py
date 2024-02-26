@@ -98,7 +98,7 @@ civil_cases_with_wage_excluded = dataset.filter(
 # 원본 데이터셋에 전처리 함수 적용
 processed_dataset = civil_cases_with_wage_excluded.map(precedents_preprocess_data)
 
-dataset2 = load_dataset(dataset_name2, cache_dir=custom_cache_dir, split="train")
+dataset2 = load_dataset(dataset_name2, 'claude_evol', cache_dir=custom_cache_dir, split="train")
 random_samples = dataset2.select(range(500))
 
 qa_dataset = random_samples.map(preprocess_data)
