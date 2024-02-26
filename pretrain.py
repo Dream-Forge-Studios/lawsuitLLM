@@ -106,7 +106,8 @@ qa_dataset = random_samples.map(preprocess_data)
 combined_dataset = concatenate_datasets([processed_dataset, qa_dataset]).shuffle()
 
 # 원본 데이터셋의 다른 열을 제거하고 'input_text'만 남깁니다.
-final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
+# final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
+final_dataset = combined_dataset.remove_columns([column_name for column_name in combined_dataset.column_names if column_name != 'input_text'])
 # 데이터셋 토큰화 함수
 def tokenize_function(examples):
     return tokenizer(examples['input_text'], truncation=True, padding=True, max_length=cutoff_len)
