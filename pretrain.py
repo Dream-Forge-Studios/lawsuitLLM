@@ -14,7 +14,7 @@ from datasets import Dataset
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage-textbook100-llama2"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage-textbook100-c"
 dataset_name2 = 'maywell/korean_textbooks'
 
 # Loading a Gath_baize dataset
@@ -253,7 +253,7 @@ trainer = Trainer(
         model=model,
         train_dataset=tokenized_dataset,
         eval_dataset=None,
-        args=training_arguments_llama2,
+        args=training_arguments_c,
         data_collator=DataCollatorForLanguageModeling(
             tokenizer, mlm=False,  pad_to_multiple_of=8, return_tensors="pt"
         ),
