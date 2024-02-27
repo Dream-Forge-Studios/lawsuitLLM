@@ -91,7 +91,7 @@ def main(new_model):
     }
 
     results = {}
-    final_model = PeftModel.from_pretrained(model, f"D:/{new_model}")
+    final_model = PeftModel.from_pretrained(model, f"D:\lawsuit-7B\{new_model}")
 
     for key in testData.keys():
         results[key] = []
@@ -104,7 +104,7 @@ def main(new_model):
 
 
     # JSON 파일 경로
-    file_path = f"{new_model}_results.json"
+    file_path = f"results/{new_model}_results.json"
 
     # JSON 파일에 데이터 쓰기
     with open(file_path, 'w', encoding='utf-8') as json_file:
