@@ -81,10 +81,10 @@ dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train")
 # '민사' 사건 중 '임금'만 포함된 데이터 필터링하면서 테스트 케이스 제외
 civil_cases_with_wage_excluded = dataset.filter(
     lambda x: x['사건종류명'] == '민사' and
-              # x['사건명'] is not None and
-              # '임금' in x['사건명']
+              x['사건명'] is not None and
+              '임금' in x['사건명']
               # and
-              (str(x['판례정보일련번호']) in test_case_numbers or (x['사건명'] is not None and '임금' in x['사건명']))
+              # (str(x['판례정보일련번호']) in test_case_numbers or (x['사건명'] is not None and '임금' in x['사건명']))
               # x['참조조문'] is not None
               # str(x['판례정보일련번호']) in test_case_numbers
               # str(x['판례정보일련번호']) not in test_case_numbers
@@ -97,9 +97,9 @@ civil_cases_with_wage_excluded = dataset.filter(
 
 # 원본 데이터셋에 전처리 함수 적용
 processed_dataset = civil_cases_with_wage_excluded.map(precedents_preprocess_data)
-#
+# #
 dataset2 = load_dataset(dataset_name2, 'claude_evol', cache_dir=custom_cache_dir, split="train")
-random_samples = dataset2.select(range(100))
+random_samples = dataset2.select(range(300))
 
 qa_dataset = random_samples.map(preprocess_data)
 
