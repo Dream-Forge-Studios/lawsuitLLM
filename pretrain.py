@@ -14,7 +14,7 @@ from datasets import Dataset
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage500-QA100-c"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage500-QA300-c"
 # dataset_name2 = 'maywell/korean_textbooks'
 dataset_name2 = 'maywell/ko_wikidata_QA'
 
@@ -99,8 +99,9 @@ civil_cases_with_wage_excluded = dataset.filter(
 # 원본 데이터셋에 전처리 함수 적용
 processed_dataset = civil_cases_with_wage_excluded.map(precedents_preprocess_data)
 # #
-dataset2 = load_dataset(dataset_name2, 'claude_evol', cache_dir=custom_cache_dir, split="train")
-random_samples = dataset2.select(range(100))
+# dataset2 = load_dataset(dataset_name2, 'claude_evol', cache_dir=custom_cache_dir, split="train")
+dataset2 = load_dataset(dataset_name2, cache_dir=custom_cache_dir, split="train")
+random_samples = dataset2.select(range(300))
 
 qa_dataset = random_samples.map(preprocess_data)
 
