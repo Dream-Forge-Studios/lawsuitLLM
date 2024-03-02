@@ -14,8 +14,9 @@ from datasets import Dataset
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage500-c"
-dataset_name2 = 'maywell/korean_textbooks'
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage500-QA300-c"
+# dataset_name2 = 'maywell/korean_textbooks'
+dataset_name2 = 'maywell/ko_wikidata_QA'
 
 # Loading a Gath_baize dataset
 custom_cache_dir = "/data/huggingface/cache/"
@@ -98,16 +99,16 @@ civil_cases_with_wage_excluded = dataset.filter(
 # 원본 데이터셋에 전처리 함수 적용
 processed_dataset = civil_cases_with_wage_excluded.map(precedents_preprocess_data)
 # #
-# dataset2 = load_dataset(dataset_name2, 'claude_evol', cache_dir=custom_cache_dir, split="train")
-# random_samples = dataset2.select(range(300))
-#
-# qa_dataset = random_samples.map(preprocess_data)
-#
-# combined_dataset = concatenate_datasets([processed_dataset, qa_dataset]).shuffle()
+dataset2 = load_dataset(dataset_name2, 'claude_evol', cache_dir=custom_cache_dir, split="train")
+random_samples = dataset2.select(range(300))
+
+qa_dataset = random_samples.map(preprocess_data)
+
+combined_dataset = concatenate_datasets([processed_dataset, qa_dataset]).shuffle()
 
 # 원본 데이터셋의 다른 열을 제거하고 'input_text'만 남깁니다.
-final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
-# final_dataset = combined_dataset.remove_columns([column_name for column_name in combined_dataset.column_names if column_name != 'input_text'])
+# final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
+final_dataset = combined_dataset.remove_columns([column_name for column_name in combined_dataset.column_names if column_name != 'input_text'])
 # 데이터셋 토큰화 함수
 def tokenize_function(examples):
     return tokenizer(examples['input_text'], truncation=True, padding=True, max_length=cutoff_len)
