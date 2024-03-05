@@ -69,19 +69,19 @@ def precedents_preprocess_data(examples):
 
     combined_parts = []
 
-    if decision:
-        combined_parts.append(f'판시사항: {decision}')
-    if summary:
-        combined_parts.append(f'판결요지: {summary}')
-    if laws:
-        combined_parts.append(f'참조조문: {laws}')
-
-    if precedents:
-        precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
-    else:
-        precedents += examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples[
-            '사건번호'] + " " + '판결'
-    combined_parts.append(f'참조판례: {precedents}')
+    # if decision:
+    #     combined_parts.append(f'판시사항: {decision}')
+    # if summary:
+    #     combined_parts.append(f'판결요지: {summary}')
+    # if laws:
+    #     combined_parts.append(f'참조조문: {laws}')
+    #
+    # if precedents:
+    #     precedents += ', ' + examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples['사건번호'] + " " + '판결'
+    # else:
+    #     precedents += examples['법원명'] + " " + format_date(examples['선고일자']) + " " + examples['선고'] + " " + examples[
+    #         '사건번호'] + " " + '판결'
+    # combined_parts.append(f'참조판례: {precedents}')
 
     if reason:
         split_text = re.split("【이\s*유】", examples['전문'], maxsplit=1)
