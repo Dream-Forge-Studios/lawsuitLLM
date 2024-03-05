@@ -14,7 +14,7 @@ from datasets import Dataset
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage-adamw-c"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage-pagedadamw-c"
 # dataset_name2 = 'maywell/korean_textbooks'
 dataset_name2 = 'maywell/ko_wikidata_QA'
 
@@ -162,8 +162,8 @@ training_arguments_c = TrainingArguments(
     num_train_epochs= 1,
     per_device_train_batch_size= 1,
     gradient_accumulation_steps= 4,
-    # optim = "paged_adamw_32bit",
-    optim = "adamw_torch",
+    optim = "paged_adamw_32bit",
+    # optim = "adamw_torch",
     save_steps= 30,
     logging_steps= 30,
     learning_rate= 2e-4,
