@@ -39,8 +39,8 @@ def main(new_model):
 
         streamer = TextStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
 
-        generated_ids = final_model.generate(**inputs, streamer=streamer, max_new_tokens=400)
-        # generated_ids = final_model.generate(**inputs, streamer=streamer, max_new_tokens=4000)
+        generated_ids = model.generate(**inputs, streamer=streamer, max_new_tokens=400)
+        # generated_ids = model.generate(**inputs, streamer=streamer, max_new_tokens=1000)
 
         decoded = tokenizer.batch_decode(generated_ids)
 
@@ -90,21 +90,27 @@ def main(new_model):
         ],
     }
 
+    # testData = {
+    #     '근로기준법 제18조': [
+    #         "'파트타임 근로자인 현지는 주 12시간 근무하며, 그녀의 근로조건 결정 시, 회사는 통상 근로자와의 비교 없이 임의로 결정했습니다.'이에 대한 법적 판단은?",
+    #     ],
+    # }
+
     results = {}
-    final_model = PeftModel.from_pretrained(model, f"D:\lawsuit-7B\{new_model}")
+    model = PeftModel.from_pretrained(model, f"D:\lawsuit-7B\{new_model}")
 
     for key in testData.keys():
         results[key] = []
 
     for key in testData.keys():
         for prompt in testData[key]:
-            # stream("'" + prompt + "'와 관련된 법은?", key)
             stream("'" + prompt + "'이에 대한 법적 판단은?", key)
 
 
 
     # JSON 파일 경로
     file_path = f"results/{new_model}_results.json"
+    # file_path = f"results/lawsuit-7B-wage-100-c_results.json"
 
     # JSON 파일에 데이터 쓰기
     with open(file_path, 'w', encoding='utf-8') as json_file:
