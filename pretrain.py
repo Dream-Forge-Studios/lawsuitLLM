@@ -7,7 +7,7 @@ from datasets import load_dataset, concatenate_datasets
 import re
 import torch
 import logging
-from utils import filter_with_reference, precedents_preprocess_data, preprocess_data
+from utils import filter_with_reference, precedents_preprocess_data, ko_wikidata_QA, huggin_precedents, korean_textbooks
 from collections import Counter
 import pandas as pd
 from datasets import Dataset
@@ -62,59 +62,17 @@ tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
 tokenizer.add_eos_token = True
 tokenizer.add_bos_token, tokenizer.add_eos_token
 
-# dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train").shuffle()
-dataset = load_dataset(dataset_name, cache_dir=custom_cache_dir, split="train")
-
-# civil_cases_not_with_wage_excluded = dataset.filter(
-#     lambda x: x['사건종류명'] == '민사' and (x['사건명'] is None or '임금' not in x['사건명'])
-# )
-#
-# # civil_cases_not_with_wage_excluded에서 랜덤으로 100개 샘플 선택
-# random_samples = civil_cases_not_with_wage_excluded.shuffle().select(range(100))
-# #
-# # 테스트 데이터의 판례번호를 추출
-# test_case_numbers = random_samples['판례정보일련번호']
-#
-# # 판례번호를 파일에 저장
-# test_case_file = "not_with_wage_case_numbers_500.txt"
-# with open(test_case_file, 'w') as f:
-#     for number in test_case_numbers:
-#         f.write("%s\n" % number)
-
-# '민사' 사건 중 '임금'만 포함된 데이터 필터링하면서 테스트 케이스 제외
-civil_cases_with_wage_excluded = dataset.filter(
-    lambda x: x['사건종류명'] == '민사'
-              and
-              x['사건명'] is not None
-              and
-              '임금' in x['사건명']
-              # and
-              # (str(x['판례정보일련번호']) in test_case_numbers or (x['사건명'] is not None and '임금' in x['사건명']))
-              # x['참조조문'] is not None
-              # str(x['판례정보일련번호']) in test_case_numbers
-              # str(x['판례정보일련번호']) not in test_case_numbers
-)
 
 
-# # 최종 필터링된 데이터셋 생성
-civil_cases_with_wage_excluded, law_references = filter_with_reference(civil_cases_with_wage_excluded,2)
-# law_count = Counter(law_references)
-# print(law_count)
+processed_dataset = huggin_precedents()
+qa_dataset = ko_wikidata_QA(300)
+textbooks_dataset = korean_textbooks(300)
 
-# 원본 데이터셋에 전처리 함수 적용
-processed_dataset = civil_cases_with_wage_excluded.map(precedents_preprocess_data)
-# #
-# dataset2 = load_dataset(dataset_name2, 'claude_evol', cache_dir=custom_cache_dir, split="train")
-# # dataset2 = load_dataset(dataset_name2, cache_dir=custom_cache_dir, split="train")
-# random_samples = dataset2.select(range(300))
-#
-# qa_dataset = random_samples.map(preprocess_data)
-#
-# combined_dataset = concatenate_datasets([processed_dataset, qa_dataset]).shuffle()
+combined_dataset = concatenate_datasets([processed_dataset, qa_dataset]).shuffle()
 
 # 원본 데이터셋의 다른 열을 제거하고 'input_text'만 남깁니다.
-final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
-# final_dataset = combined_dataset.remove_columns([column_name for column_name in combined_dataset.column_names if column_name != 'input_text'])
+# final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
+final_dataset = combined_dataset.remove_columns([column_name for column_name in combined_dataset.column_names if column_name != 'input_text'])
 # 데이터셋 토큰화 함수
 def tokenize_function(examples):
     return tokenizer(examples['input_text'], truncation=True, padding=True, max_length=cutoff_len)
