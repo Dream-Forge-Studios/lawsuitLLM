@@ -16,7 +16,7 @@ from datasets import Dataset
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-wage-judge"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-test"
 dataset_name2 = 'maywell/korean_textbooks'
 # dataset_name2 = 'maywell/ko_wikidata_QA'
 
@@ -88,9 +88,9 @@ run = wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training
 
 model = prepare_model_for_kbit_training(model)
 peft_config = LoraConfig(
-        r=16,
+        r=8,
         lora_alpha=16,
-        lora_dropout=0.05,
+        lora_dropout=0.1,
         bias="none",
         task_type="CAUSAL_LM",
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj","gate_proj"]
@@ -123,8 +123,8 @@ training_arguments_llama2 = TrainingArguments(
 training_arguments_c = TrainingArguments(
     output_dir= "./results",
     num_train_epochs= 1,
-    per_device_train_batch_size= 1,
-    gradient_accumulation_steps= 4,
+    per_device_train_batch_size= 2,
+    gradient_accumulation_steps= 8,
     optim = "paged_adamw_32bit",
     save_steps= 30,
     logging_steps= 30,

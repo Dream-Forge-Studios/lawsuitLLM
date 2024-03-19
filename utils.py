@@ -8,6 +8,9 @@ from datasets import load_dataset
 import os
 import json
 import pdfplumber
+import requests
+from bs4 import BeautifulSoup, NavigableString, Tag
+from tqdm import tqdm
 
 # Loading a Gath_baize dataset
 custom_cache_dir = "/data/huggingface/cache/"
@@ -228,7 +231,7 @@ def ai_hub_precedents():
     df = pd.DataFrame(courtDcss_values)
     return Dataset.from_pandas(df)
 
-def law_translate():
+def law_translate_pdf():
     # PDF 파일 경로
     pdf_path = r'C:\Users\tyflow\Downloads\2023_상반기_법령해석사례집(상).pdf'
 
@@ -263,4 +266,133 @@ def law_translate():
     with open('data.json', 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-law_translate()
+def law_translate_href(start_page=1):
+    base_url = "https://www.moleg.go.kr/lawinfo/nwLwAnList.mo"
+    links = []
+
+    while True:
+        # 현재 페이지 URL 구성
+        url = f"{base_url}?mid=a10106020000&currentPage={start_page}&pageCnt=10&keyField=&keyWord=&sort=date"
+        response = requests.get(url)
+
+        # 요청이 성공적이지 않은 경우 반복 중단
+        if response.status_code != 200:
+            break
+
+        # BeautifulSoup 객체 생성
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # tbody 내의 모든 a 태그 찾기
+        tbody = soup.find('tbody')
+        if tbody:
+            a_tags = tbody.find_all('a')
+            for a in a_tags:
+                href = a.get('href')
+                if href:
+                    links.append(href.replace('¤', '&curren'))
+
+        # 링크가 없거나 특정 조건에 따라 반복 중단
+        if not a_tags:
+            break
+
+        # 다음 페이지로
+        start_page += 1
+
+    with open('law_translate_links.json', 'w', encoding='utf-8') as file:
+        json.dump(links, file, ensure_ascii=False, indent=4)
+
+def get_custom_text(div):
+    text_parts = []  # 최종 텍스트 조각들을 저장할 리스트
+    for content in div.contents:  # div의 자식 요소들을 순회
+        if isinstance(content, NavigableString):
+            text_parts.append(content.strip())
+        elif isinstance(content, Tag):
+            if content.name == 'strong':  # 'strong' 태그인 경우
+                text_parts.append(content.get_text(strip=True) + ' ')  # 텍스트 뒤에 띄어쓰기 추가
+            else:
+                text_parts.append(content.get_text(strip=True))
+    return ' '.join(text_parts)  # 모든 텍스트 조각들을 공백으로 연결
+
+def law_translate_crawling():
+    # links.json 파일에서 링크들 읽기
+    with open('law_translate_links.json', 'r', encoding='utf-8') as file:
+        links = json.load(file)
+
+    base_url = "https://www.moleg.go.kr/"
+    extracted_data = []  # URL, 추출된 텍스트 및 추가 데이터를 저장할 리스트
+
+    for link in tqdm(links):
+        # 완전한 URL 생성
+        full_url = base_url + link
+        # URL로부터 HTML 내용 가져오기
+        response = requests.get(full_url)
+        # 응답이 성공적이면, BeautifulSoup으로 HTML 파싱
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            # 'tb_contents' 클래스를 가진 div 태그들 찾기
+            divs = soup.find_all('div', class_='tb_contents')
+            page_text = ''.join(get_custom_text(div) + '\n' for div in divs[:-1])
+
+            # 특정 요소에서 추가 데이터 추출
+            specific_element = soup.find('li', class_='date').find('span')
+            data_text = specific_element.get_text(strip=True) if specific_element else 'Not found'
+
+            # 현재 페이지의 URL, 텍스트 및 추가 데이터를 딕셔너리로 저장
+            extracted_data.append({'url': full_url, 'text': re.sub(r'\s{2,}', ' ', page_text), 'data': data_text})
+
+    # 추출된 데이터를 JSON 파일로 저장
+    with open('law_translate_data.json', 'w', encoding='utf-8') as file:
+        json.dump(extracted_data, file, ensure_ascii=False, indent=4)
+
+def trim_text_after_warning(text):
+    # '※ 주의' 문자열이 나오는 위치를 찾습니다.
+    index = text.find('\n\n\n※ 주의')
+
+    # 문자열이 발견되면, 해당 부분부터 모든 텍스트를 제거합니다.
+    if index != -1:
+        # '※ 주의' 문자열이 포함된 부분부터 시작하여 그 이전의 텍스트만 반환합니다.
+        return text[:index]
+    else:
+        # '※ 주의' 문자열이 없는 경우, 원본 텍스트를 그대로 반환합니다.
+        return text
+
+def law_qa_crawling():
+    base_url = "https://www.klac.or.kr/legalinfo/counselView.do"
+    bNum = 1
+    sNum = 1
+    extracted_data = []
+
+    # tqdm 객체 초기화. 전체 데이터 개수를 10037로 설정.
+    pbar = tqdm(total=10037, desc='크롤링 진행률')
+
+    while True:
+        # bNum과 sNum을 사용하여 caseId를 생성
+        caseId = f"case-{bNum:03}-{sNum:05}"
+
+        # 완성된 URL
+        url = f"{base_url}?pageIndex=8&folderId=000&caseId={caseId}&listNm=전체&searchCnd=0&searchWrd=&scdFolderId="
+
+        # 페이지 요청 및 BeautifulSoup 객체 생성
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        dds = soup.find_all('dd')
+        print('bNum: ' + str(bNum))
+        print('sNum: ' + str(sNum))
+        if dds[4].getText() != '':
+            extracted_data.append({'url': url, 'gubun': dds[3].getText(), 'title': dds[4].getText(), 'question': dds[5].getText(), 'answer': trim_text_after_warning(dds[6].getText())})
+            pbar.update(1)
+            sNum += 1
+        else:
+            if sNum == 1:
+                print("첫 번째 sNum에서 데이터 없음, 크롤링 종료.")
+                break
+            # 이전 bNum에서 데이터를 찾았으면 sNum을 리셋하고 bNum을 증가
+            sNum = 1
+            bNum += 1
+
+    with open('law_qa_data.json', 'w', encoding='utf-8') as file:
+        json.dump(extracted_data, file, ensure_ascii=False, indent=4)
+
+law_qa_crawling()
+# https://www.klac.or.kr/legalinfo/counselView.do?pageIndex=1&folderId=000&caseId=case-021-00431&listNm=%EC%A0%84%EC%B2%B4&searchCnd=0&searchWrd=&scdFolderId=
+# https://www.klac.or.kr/legalinfo/counselView.do?pageIndex=8&folderId=000&caseId=case-001-00127&listNm=%EC%A0%84%EC%B2%B4&searchCnd=0&searchWrd=&scdFolderId=
