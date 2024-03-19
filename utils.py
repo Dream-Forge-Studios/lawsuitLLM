@@ -7,7 +7,7 @@ import random
 from datasets import load_dataset
 import os
 import json
-import pdfplumber
+# import pdfplumber
 import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
 from tqdm import tqdm
@@ -279,40 +279,41 @@ def law_translate_datas():
 
     df = pd.DataFrame(results)
     return Dataset.from_pandas(df)
-def law_translate_pdf():
-    # PDF 파일 경로
-    pdf_path = r'C:\Users\tyflow\Downloads\2023_상반기_법령해석사례집(상).pdf'
 
-    data = []
-    extracted_text = ''
-    chapter_started = False
-    pattern_bigo = r'\n\d+\).+?(?=\n\d+\)|$)'
-    pattern_list = r'^\d+\n･\n'
-    # PDF 파일 열기
-    with pdfplumber.open(pdf_path) as pdf:
-        # PDF의 각 페이지를 순회
-        for page in pdf.pages:
-            # 현재 페이지의 텍스트 추출
-            text = page.extract_text()
-            if text:  # 텍스트가 있는 경우에만 추가
-                if re.match(pattern_list, text) is None:
-                    text = text.split('\n', maxsplit=1)[1]
-                    if "1. 질의요지" in text:
-                        chapter_started = True
-                        if extracted_text:
-                            extracted_text = re.sub(r'2\. 회답', '', extracted_text)
-                            extracted_text = re.sub(r'3\. 이유', '', extracted_text)
-                            data.append({'input_text': extracted_text})
-                        extracted_text = re.sub(pattern_bigo, '', text.split('1. 질의요지')[1], flags=re.DOTALL)
-
-                    elif chapter_started:
-                        extracted_text += re.sub(pattern_bigo, '', text, flags=re.DOTALL)
-                elif '편집ㆍ발행' in text:
-                    extracted_text = re.sub(r'2\. 회답', '', extracted_text)
-                    extracted_text = re.sub(r'3\. 이유', '', extracted_text)
-                    data.append({'input_text': extracted_text})
-    with open('data.json', 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+# def law_translate_pdf():
+#     # PDF 파일 경로
+#     pdf_path = r'C:\Users\tyflow\Downloads\2023_상반기_법령해석사례집(상).pdf'
+#
+#     data = []
+#     extracted_text = ''
+#     chapter_started = False
+#     pattern_bigo = r'\n\d+\).+?(?=\n\d+\)|$)'
+#     pattern_list = r'^\d+\n･\n'
+#     # PDF 파일 열기
+#     with pdfplumber.open(pdf_path) as pdf:
+#         # PDF의 각 페이지를 순회
+#         for page in pdf.pages:
+#             # 현재 페이지의 텍스트 추출
+#             text = page.extract_text()
+#             if text:  # 텍스트가 있는 경우에만 추가
+#                 if re.match(pattern_list, text) is None:
+#                     text = text.split('\n', maxsplit=1)[1]
+#                     if "1. 질의요지" in text:
+#                         chapter_started = True
+#                         if extracted_text:
+#                             extracted_text = re.sub(r'2\. 회답', '', extracted_text)
+#                             extracted_text = re.sub(r'3\. 이유', '', extracted_text)
+#                             data.append({'input_text': extracted_text})
+#                         extracted_text = re.sub(pattern_bigo, '', text.split('1. 질의요지')[1], flags=re.DOTALL)
+#
+#                     elif chapter_started:
+#                         extracted_text += re.sub(pattern_bigo, '', text, flags=re.DOTALL)
+#                 elif '편집ㆍ발행' in text:
+#                     extracted_text = re.sub(r'2\. 회답', '', extracted_text)
+#                     extracted_text = re.sub(r'3\. 이유', '', extracted_text)
+#                     data.append({'input_text': extracted_text})
+#     with open('data.json', 'w', encoding='utf-8') as f:
+#         json.dump(data, f, ensure_ascii=False, indent=4)
 
 def law_translate_href(start_page=1):
     base_url = "https://www.moleg.go.kr/lawinfo/nwLwAnList.mo"
