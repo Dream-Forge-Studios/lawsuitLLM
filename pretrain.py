@@ -282,7 +282,7 @@ trainer = Trainer(
         model=model,
         train_dataset=tokenized_dataset,
         eval_dataset=None,
-        args=training_arguments_deepspeed,
+        args=training_arguments_c,
         data_collator=DataCollatorForLanguageModeling(
             tokenizer, mlm=False,  pad_to_multiple_of=8, return_tensors="pt"
         ),
