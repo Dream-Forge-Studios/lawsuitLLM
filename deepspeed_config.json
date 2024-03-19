@@ -15,7 +15,7 @@
     "params": {
       "lr": 0.0002,
       "betas": [0.9, 0.999],
-      "eps": 1e-6,
+      "eps": "auto",
       "weight_decay": 0.001
     }
   },
