@@ -20,14 +20,7 @@
     }
   },
   "scheduler": {
-    "type": "WarmupCosine",
-    "params": {
-      "warmup_min_lr": 0,
-      "warmup_max_lr": 0.0002,
-      "warmup_num_steps": 3616,
-      "total_num_steps": 12054
-
-    }
+    "type": "auto"
   },
   "fp16": {
     "enabled": false
