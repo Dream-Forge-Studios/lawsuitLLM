@@ -259,7 +259,7 @@ def ai_hub_precedents():
 
 def law_qa_datas():
     results = []
-    full_path = train_data_root + r'\law_train_data\law_qa_data.json'
+    full_path = train_data_root + r'/law_train_data/law_qa_data.json'
 
     with open(full_path, 'r', encoding='utf-8') as f:
         datas = json.load(f)
@@ -270,7 +270,7 @@ def law_qa_datas():
     return Dataset.from_pandas(df)
 def law_translate_datas():
     results = []
-    full_path = train_data_root + r'\law_train_data\law_translate_data.json'
+    full_path = train_data_root + r'/law_train_data/law_translate_data.json'
 
     with open(full_path, 'r', encoding='utf-8') as f:
         datas = json.load(f)
