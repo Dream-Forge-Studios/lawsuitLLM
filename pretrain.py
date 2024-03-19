@@ -44,18 +44,12 @@ bnb_config = BitsAndBytesConfig(
 )
 
 
-model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=bnb_config)
-if torch.cuda.device_count() > 1:
-    model = torch.nn.DataParallel(model)
-
-model.to("cuda")
-
-if hasattr(model, "module"):
-    model.module.config.use_cache = False
-    model.module.config.pretraining_tp = 1
-else:
-    model.config.use_cache = False
-    model.config.pretraining_tp = 1
+model = AutoModelForCausalLM.from_pretrained(
+    base_model,
+    quantization_config=bnb_config,
+)
+model.config.use_cache = False # silence the warnings. Please re-enable for inference!
+model.config.pretraining_tp = 1
 
 # 그래디언트 체크포인팅 활성화
 # model.gradient_checkpointing_enable()
