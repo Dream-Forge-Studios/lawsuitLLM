@@ -7,7 +7,7 @@ from datasets import load_dataset, concatenate_datasets
 import re
 import torch
 import logging
-from utils import filter_with_reference, precedents_preprocess_data, ko_wikidata_QA, huggin_precedents, korean_textbooks
+from utils import ko_wikidata_QA, hugging_precedents, korean_textbooks, ai_hub_precedents, law_qa_datas, law_translate_datas
 from collections import Counter
 import pandas as pd
 from datasets import Dataset
@@ -16,7 +16,7 @@ from datasets import Dataset
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-test"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-pretain-deepspeed"
 dataset_name2 = 'maywell/korean_textbooks'
 # dataset_name2 = 'maywell/ko_wikidata_QA'
 
@@ -31,8 +31,8 @@ cutoff_len = 4096
 
 
 # 파일에서 판례정보일련번호 목록 로드
-with open(test_case_file, 'r') as f:
-    test_case_numbers = [line.strip() for line in f.readlines()]
+# with open(test_case_file, 'r') as f:
+#     test_case_numbers = [line.strip() for line in f.readlines()]
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
@@ -64,21 +64,26 @@ tokenizer.add_bos_token, tokenizer.add_eos_token
 
 
 
-processed_dataset = huggin_precedents()
-qa_dataset = ko_wikidata_QA(300)
-textbooks_dataset = korean_textbooks(300)
+processed_dataset = hugging_precedents()
+processed_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
+ai_hub_precedents_dataset = ai_hub_precedents()
+law_qa_dataset = law_qa_datas()
+law_translate_dataset = law_translate_datas()
 
-combined_dataset = concatenate_datasets([processed_dataset, qa_dataset]).shuffle()
+# qa_dataset = ko_wikidata_QA(300)
+textbooks_dataset = korean_textbooks(945, 'tiny-textbooks')
+
+combined_dataset = concatenate_datasets([processed_dataset, ai_hub_precedents_dataset, law_qa_dataset, law_translate_dataset, textbooks_dataset]).shuffle()
 
 # 원본 데이터셋의 다른 열을 제거하고 'input_text'만 남깁니다.
 # final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
-final_dataset = combined_dataset.remove_columns([column_name for column_name in combined_dataset.column_names if column_name != 'input_text'])
+# final_dataset = combined_dataset.remove_columns([column_name for column_name in combined_dataset.column_names if column_name != 'input_text'])
 # 데이터셋 토큰화 함수
 def tokenize_function(examples):
     return tokenizer(examples['input_text'], truncation=True, padding=True, max_length=cutoff_len)
 
 # 데이터셋 토큰화 적용
-tokenized_dataset = final_dataset.map(tokenize_function, batched=True)
+tokenized_dataset = combined_dataset.map(tokenize_function, batched=True)
 
 with open('/data/llm/wandbKey_js.txt', 'r') as file:
     wandb_key = file.read().strip()
@@ -88,7 +93,7 @@ run = wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training
 
 model = prepare_model_for_kbit_training(model)
 peft_config = LoraConfig(
-        r=8,
+        r=16,
         lora_alpha=16,
         lora_dropout=0.1,
         bias="none",
@@ -119,7 +124,25 @@ training_arguments_llama2 = TrainingArguments(
     report_to="wandb"
 )
 
-
+training_arguments_deepspeed = TrainingArguments(
+    output_dir="./results",
+    num_train_epochs=1,
+    per_device_train_batch_size=2,  # DeepSpeed 설정은 전체 배치 크기를 결정하는데 사용되므로, 여기서는 GPU당 배치 크기만 지정합니다.
+    gradient_accumulation_steps=8,  # 이 값은 DeepSpeed 설정 파일에 명시된 값과 호환되어야 합니다.
+    optim="adamw_torch",  # DeepSpeed를 사용할 때는 이 옵션 대신 DeepSpeed의 설정을 사용합니다.
+    save_steps=1500,
+    logging_steps=250,
+    learning_rate=2e-4,
+    weight_decay=0.001,
+    fp16=False,  # DeepSpeed 설정 파일에서 관리합니다.
+    bf16=False,  # DeepSpeed 설정 파일에서 관리합니다.
+    max_grad_norm=0.3,
+    warmup_ratio=0.3,  # DeepSpeed 설정 파일에서 관리합니다.
+    group_by_length=True,
+    lr_scheduler_type="cosine",  # DeepSpeed 설정 파일에서 관리합니다.
+    report_to="wandb",
+    deepspeed="deepspeed_config.json"  # DeepSpeed 설정 파일 참조
+)
 training_arguments_c = TrainingArguments(
     output_dir= "./results",
     num_train_epochs= 1,
@@ -258,7 +281,7 @@ trainer = Trainer(
         model=model,
         train_dataset=tokenized_dataset,
         eval_dataset=None,
-        args=training_arguments_c,
+        args=training_arguments_deepspeed,
         data_collator=DataCollatorForLanguageModeling(
             tokenizer, mlm=False,  pad_to_multiple_of=8, return_tensors="pt"
         ),
