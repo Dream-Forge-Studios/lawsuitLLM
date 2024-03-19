@@ -16,7 +16,7 @@ from datasets import Dataset
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
-dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-pretain-deepspeed"
+dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-pretain"
 dataset_name2 = 'maywell/korean_textbooks'
 # dataset_name2 = 'maywell/ko_wikidata_QA'
 
@@ -48,6 +48,7 @@ bnb_config = BitsAndBytesConfig(
 model = AutoModelForCausalLM.from_pretrained(
     base_model,
     quantization_config=bnb_config,
+    device_map="auto"
 )
 model.config.use_cache = False # silence the warnings. Please re-enable for inference!
 model.config.pretraining_tp = 1
@@ -125,25 +126,25 @@ training_arguments_llama2 = TrainingArguments(
     report_to="wandb"
 )
 
-training_arguments_deepspeed = TrainingArguments(
-    output_dir="./results",
-    num_train_epochs=1,
-    # per_device_train_batch_size=2,  # DeepSpeed 설정은 전체 배치 크기를 결정하는데 사용되므로, 여기서는 GPU당 배치 크기만 지정합니다.
-    # gradient_accumulation_steps=8,  # 이 값은 DeepSpeed 설정 파일에 명시된 값과 호환되어야 합니다.
-    # optim="adamw_torch",  # DeepSpeed를 사용할 때는 이 옵션 대신 DeepSpeed의 설정을 사용합니다.
-    save_steps=1500,
-    logging_steps=250,
-    learning_rate=2e-4,
-    weight_decay=0.001,
-    # fp16=False,  # DeepSpeed 설정 파일에서 관리합니다.
-    # bf16=False,  # DeepSpeed 설정 파일에서 관리합니다.
-    max_grad_norm=0.3,
-    # warmup_ratio=0.3,  # DeepSpeed 설정 파일에서 관리합니다.
-    group_by_length=True,
-    # lr_scheduler_type="cosine",  # DeepSpeed 설정 파일에서 관리합니다.
-    report_to="wandb",
-    deepspeed="deepspeed_config.json"  # DeepSpeed 설정 파일 참조
-)
+# training_arguments_deepspeed = TrainingArguments(
+#     output_dir="./results",
+#     num_train_epochs=1,
+#     # per_device_train_batch_size=2,  # DeepSpeed 설정은 전체 배치 크기를 결정하는데 사용되므로, 여기서는 GPU당 배치 크기만 지정합니다.
+#     # gradient_accumulation_steps=8,  # 이 값은 DeepSpeed 설정 파일에 명시된 값과 호환되어야 합니다.
+#     # optim="adamw_torch",  # DeepSpeed를 사용할 때는 이 옵션 대신 DeepSpeed의 설정을 사용합니다.
+#     save_steps=1500,
+#     logging_steps=250,
+#     learning_rate=2e-4,
+#     weight_decay=0.001,
+#     # fp16=False,  # DeepSpeed 설정 파일에서 관리합니다.
+#     # bf16=False,  # DeepSpeed 설정 파일에서 관리합니다.
+#     max_grad_norm=0.3,
+#     # warmup_ratio=0.3,  # DeepSpeed 설정 파일에서 관리합니다.
+#     group_by_length=True,
+#     # lr_scheduler_type="cosine",  # DeepSpeed 설정 파일에서 관리합니다.
+#     report_to="wandb",
+#     deepspeed="deepspeed_config.json"  # DeepSpeed 설정 파일 참조
+# )
 training_arguments_c = TrainingArguments(
     output_dir= "./results",
     num_train_epochs= 1,
