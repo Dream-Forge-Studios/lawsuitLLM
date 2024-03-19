@@ -20,19 +20,20 @@
       "weight_decay": 0.001
     }
   },
-  "scheduler": {
-    "type": "WarmupDecayLR",
-    "params": {
-      "warmup_min_lr": 0,
-      "warmup_max_lr": 2e-4,
-      "warmup_num_steps": 832,
-      "total_num_steps": 2773
-    }
-  },
+"scheduler": {
+  "type": "WarmupCosineSchedule",
+  "params": {
+    "warmup_min_lr": 0,
+    "warmup_max_lr": 2e-4,
+    "warmup_num_steps": 832,
+    "total_num_steps": 2773,
+    "num_cycles": 0.5
+  }
+},
   "fp16": {
-    "enabled": false
+    "enabled": true
   },
   "bf16": {
-    "enabled": false
+    "enabled": true
   }
 }
