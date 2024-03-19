@@ -34,8 +34,8 @@ cutoff_len = 4096
 # with open(test_case_file, 'r') as f:
 #     test_case_numbers = [line.strip() for line in f.readlines()]
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 
 bnb_config = BitsAndBytesConfig(
     load_in_4bit= True,
@@ -148,8 +148,8 @@ training_arguments_llama2 = TrainingArguments(
 training_arguments_c = TrainingArguments(
     output_dir= "./results",
     num_train_epochs= 1,
-    per_device_train_batch_size= 2,
-    gradient_accumulation_steps= 8,
+    per_device_train_batch_size= 1,
+    gradient_accumulation_steps= 4,
     optim = "paged_adamw_32bit",
     save_steps= 1500,
     logging_steps= 250,
