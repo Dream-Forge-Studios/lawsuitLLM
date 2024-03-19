@@ -72,6 +72,7 @@ law_translate_dataset = law_translate_datas()
 # qa_dataset = ko_wikidata_QA(300)
 textbooks_dataset = korean_textbooks(945, 'tiny-textbooks')
 
+# 48168개
 combined_dataset = concatenate_datasets([processed_dataset, ai_hub_precedents_dataset, law_qa_dataset, law_translate_dataset, textbooks_dataset]).shuffle()
 
 # 원본 데이터셋의 다른 열을 제거하고 'input_text'만 남깁니다.
