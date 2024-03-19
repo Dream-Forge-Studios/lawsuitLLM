@@ -44,11 +44,10 @@ bnb_config = BitsAndBytesConfig(
 )
 
 
-model = AutoModelForCausalLM.from_pretrained(
-    base_model,
-    quantization_config=bnb_config,
-    device_map="auto"
-)
+model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=bnb_config)
+if torch.cuda.device_count() > 1:
+    model = torch.nn.DataParallel(model)
+model.to("cuda")
 model.config.use_cache = False # silence the warnings. Please re-enable for inference!
 model.config.pretraining_tp = 1
 
