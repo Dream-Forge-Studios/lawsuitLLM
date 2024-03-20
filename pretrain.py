@@ -13,7 +13,7 @@ import pandas as pd
 from datasets import Dataset
 from accelerate import Accelerator
 
-print(os.environ.get("CUDA_VISIBLE_DEVICES", "Not Set"))
+
 
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
@@ -37,6 +37,8 @@ cutoff_len = 4096
 #     test_case_numbers = [line.strip() for line in f.readlines()]
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+
+print(os.environ.get("CUDA_VISIBLE_DEVICES", "Not Set"))
 
 bnb_config = BitsAndBytesConfig(
     load_in_4bit= True,
