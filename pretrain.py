@@ -12,7 +12,6 @@ from collections import Counter
 import pandas as pd
 from datasets import Dataset
 
-
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
@@ -35,7 +34,6 @@ cutoff_len = 4096
 #     test_case_numbers = [line.strip() for line in f.readlines()]
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 
 bnb_config = BitsAndBytesConfig(
     load_in_4bit= True,
@@ -152,7 +150,9 @@ training_arguments_c = TrainingArguments(
     gradient_accumulation_steps= 4,
     optim = "paged_adamw_32bit",
     save_steps= 1500,
-    logging_steps= 250,
+    logging_dir="./logs",
+    # logging_steps= 250,
+    logging_steps= 1,
     learning_rate= 2e-4,
     weight_decay= 0.001,
     fp16= False,
@@ -288,6 +288,8 @@ trainer = Trainer(
             tokenizer, mlm=False,  pad_to_multiple_of=8, return_tensors="pt"
         ),
     )
+
+print(trainer.args)
 
 # 로거 설정
 logger = logging.getLogger(__name__)
