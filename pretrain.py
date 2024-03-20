@@ -11,6 +11,7 @@ from utils import ko_wikidata_QA, hugging_precedents, korean_textbooks, ai_hub_p
 from collections import Counter
 import pandas as pd
 from datasets import Dataset
+from accelerate import Accelerator
 
 print(os.environ.get("CUDA_VISIBLE_DEVICES", "Not Set"))
 
@@ -281,15 +282,24 @@ def formatting_prompts_func(example):
 #     packing= False,
 # )
 
-trainer = Trainer(
-        model=model,
-        train_dataset=tokenized_dataset,
-        eval_dataset=None,
-        args=training_arguments_c,
-        data_collator=DataCollatorForLanguageModeling(
-            tokenizer, mlm=False,  pad_to_multiple_of=8, return_tensors="pt"
-        ),
+data_collator = DataCollatorForLanguageModeling(
+        tokenizer, mlm=False, pad_to_multiple_of=8, return_tensors="pt"
     )
+# Accelerator 인스턴스 생성
+accelerator = Accelerator()
+
+# Accelerate를 사용하여 모델, 옵티마이저, 데이터 콜레이터 준비
+model, tokenizer, train_dataloader = accelerator.prepare(model, tokenizer, data_collator)
+
+# Trainer 대신 Accelerator를 사용한 학습 준비
+trainer = Trainer(
+    model=model,
+    args=training_arguments_c,
+    train_dataset=tokenized_dataset,
+    eval_dataset=None,
+    tokenizer=tokenizer,
+    data_collator=data_collator,
+)
 
 print(trainer.args)
 
