@@ -51,6 +51,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
         quantization_config=bnb_config,
+        device_map={'': torch.cuda.current_device()}
         # device_map="auto"
     )
     model.config.use_cache = False # silence the warnings. Please re-enable for inference!
@@ -291,7 +292,7 @@ def main():
     accelerator = Accelerator()
 
     # Accelerate를 사용하여 모델, 옵티마이저, 데이터 콜레이터 준비
-    model, tokenizer, train_dataloader = accelerator.prepare(model, tokenizer, data_collator)
+    model, tokenizer = accelerator.prepare(model, tokenizer)
 
     # Trainer 대신 Accelerator를 사용한 학습 준비
     trainer = Trainer(
