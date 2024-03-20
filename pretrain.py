@@ -96,7 +96,7 @@ def main():
     wandb.login(key = wandb_key)
     run = wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training", anonymous="allow")
 
-    model = prepare_model_for_kbit_training(model)
+    # model = prepare_model_for_kbit_training(model)
     peft_config = LoraConfig(
             r=16,
             lora_alpha=16,
@@ -152,7 +152,7 @@ def main():
         output_dir= "./results",
         num_train_epochs= 1,
         per_device_train_batch_size= 1,
-        gradient_accumulation_steps= 2,
+        gradient_accumulation_steps= 4,
         optim = "paged_adamw_32bit",
         save_steps= 1500,
         logging_dir="./logs",
