@@ -47,13 +47,18 @@ def main():
         bnb_4bit_use_double_quant= False,
     )
 
+    # 현재 활성화된 GPU 디바이스를 얻습니다.
+    device = torch.device(f"cuda:{torch.cuda.current_device()}") if torch.cuda.is_available() else torch.device("cpu")
 
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
         quantization_config=bnb_config,
-        device_map={'': torch.cuda.current_device()}
         # device_map="auto"
     )
+
+    # 모델을 현재 디바이스로 명시적으로 이동시킵니다.
+    model.to(device)
+
     model.config.use_cache = False # silence the warnings. Please re-enable for inference!
     model.config.pretraining_tp = 1
 
