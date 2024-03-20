@@ -12,6 +12,8 @@ from collections import Counter
 import pandas as pd
 from datasets import Dataset
 
+print(os.environ.get("CUDA_VISIBLE_DEVICES", "Not Set"))
+
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
