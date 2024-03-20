@@ -35,7 +35,7 @@ cutoff_len = 4096
 # with open(test_case_file, 'r') as f:
 #     test_case_numbers = [line.strip() for line in f.readlines()]
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 bnb_config = BitsAndBytesConfig(
     load_in_4bit= True,
