@@ -51,7 +51,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
         quantization_config=bnb_config,
-        device_map="auto"
+        # device_map="auto"
     )
     model.config.use_cache = False # silence the warnings. Please re-enable for inference!
     model.config.pretraining_tp = 1
