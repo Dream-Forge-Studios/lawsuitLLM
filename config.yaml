@@ -7,5 +7,4 @@ main_training_function: main
 mixed_precision: fp16
 num_machines: 1
 num_processes: 4
-deep_speed: null
 fp16: false
