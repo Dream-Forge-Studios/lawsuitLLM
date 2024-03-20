@@ -49,10 +49,10 @@ def main():
 
     # 현재 활성화된 GPU 디바이스를 얻습니다.
     device = torch.device(f"cuda:{torch.cuda.current_device()}") if torch.cuda.is_available() else torch.device("cpu")
-
+    print(device)
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
-        quantization_config=bnb_config,
+        # quantization_config=bnb_config,
         # device_map="auto"
     )
 
