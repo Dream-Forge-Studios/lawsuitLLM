@@ -52,7 +52,7 @@ def main():
         quantization_config=bnb_config,
     )
     model.config.use_cache = False # silence the warnings. Please re-enable for inference!
-    model.config.pretraining_tp = 1
+    # model.config.pretraining_tp = 1
 
     # 그래디언트 체크포인팅 활성화
     model.gradient_checkpointing_enable()

@@ -59,7 +59,7 @@ def main():
     model.config.pretraining_tp = 4
 
     # 그래디언트 체크포인팅 활성화
-    model.gradient_checkpointing_enable()
+    # model.gradient_checkpointing_enable()
 
     # Load tokenizer
     tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
@@ -98,7 +98,7 @@ def main():
     wandb.login(key = wandb_key)
     run = wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training", anonymous="allow")
 
-    # model = prepare_model_for_kbit_training(model)
+    model = prepare_model_for_kbit_training(model)
     peft_config = LoraConfig(
             r=16,
             lora_alpha=16,
@@ -302,9 +302,6 @@ def main():
 
     print(trainer.args)
 
-    # 로거 설정
-    logger = logging.getLogger(__name__)
-
     # 사용 가능한 GPU 개수 확인
     num_gpus = torch.cuda.device_count()
 
@@ -312,8 +309,6 @@ def main():
     print(f"Using {num_gpus} GPUs for training.")
 
     trainer.train()
-    model.config.use_cache = False
-    model.print_trainable_parameters() # 훈련하는 파라미터의 % 체크
     # Save the fine-tuned model
     trainer.model.save_pretrained(new_model)
     wandb.finish()
