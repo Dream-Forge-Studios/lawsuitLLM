@@ -41,22 +41,18 @@ def main():
     print(os.environ.get("CUDA_VISIBLE_DEVICES", "Not Set"))
 
     bnb_config = BitsAndBytesConfig(
-        load_in_4bit= True,
-        bnb_4bit_quant_type= "nf4",
-        bnb_4bit_compute_dtype= torch.bfloat16,
-        bnb_4bit_use_double_quant= False,
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
+        bnb_4bit_use_double_quant=False,
     )
 
-    # 현재 활성화된 GPU 디바이스를 얻습니다.
-    # device = torch.device(f"cuda:{torch.cuda.current_device()}") if torch.cuda.is_available() else torch.device("cpu")
-    # print(device)
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
         quantization_config=bnb_config,
-        device_map="auto"
     )
     model.config.use_cache = False # silence the warnings. Please re-enable for inference!
-    model.config.pretraining_tp = 4
+    model.config.pretraining_tp = 1
 
     # 그래디언트 체크포인팅 활성화
     model.gradient_checkpointing_enable()
@@ -289,6 +285,11 @@ def main():
     data_collator = DataCollatorForLanguageModeling(
             tokenizer, mlm=False, pad_to_multiple_of=8, return_tensors="pt"
         )
+    # Accelerator 인스턴스 생성
+    accelerator = Accelerator()
+
+    # Accelerate를 사용하여 모델, 옵티마이저, 데이터 콜레이터 준비
+    model, tokenizer = accelerator.prepare(model, tokenizer)
 
     # Trainer 대신 Accelerator를 사용한 학습 준비
     trainer = Trainer(
