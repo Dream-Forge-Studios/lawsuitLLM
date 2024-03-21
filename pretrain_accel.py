@@ -60,7 +60,7 @@ def main():
     # 데이터셋 토큰화 적용
     tokenized_dataset = combined_dataset.map(tokenize_function, batched=True)
 
-    model = prepare_model_for_kbit_training(model)
+    # model = prepare_model_for_kbit_training(model)
     peft_config = LoraConfig(
             r=16,
             lora_alpha=16,
