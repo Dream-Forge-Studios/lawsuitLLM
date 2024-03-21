@@ -8,7 +8,7 @@ import torch
 from utils import hugging_precedents, korean_textbooks, ai_hub_precedents, law_qa_datas, law_translate_datas
 from accelerate import Accelerator
 from torch.utils.data import DataLoader
-from transformers import AdamW
+from torch.optim import AdamW
 from transformers import get_scheduler
 
 def main():
@@ -103,7 +103,7 @@ def main():
     )
     optimizer = AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     # Accelerator 초기화
-    accelerator = Accelerator(fp16=True)
+    accelerator = Accelerator()
 
     # 모델, 옵티마이저, 데이터 로더 준비
     model, optimizer, train_dataloader = accelerator.prepare(
