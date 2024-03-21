@@ -18,7 +18,8 @@ def main():
 
     os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
-    print(os.environ.get("CUDA_VISIBLE_DEVICES", "Not Set"))
+    current_device = torch.cuda.current_device()
+    print(f"Current CUDA Device: GPU {current_device}")
 
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
@@ -30,6 +31,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
         quantization_config=bnb_config,
+        device_map={'': torch.cuda.current_device()}
     )
     model.config.use_cache = False # silence the warnings. Please re-enable for inference!
     # model.config.pretraining_tp = 1
