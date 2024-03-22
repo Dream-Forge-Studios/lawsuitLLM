@@ -31,13 +31,13 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
         quantization_config=bnb_config,
-        # device_map={"": PartialState().process_index},
+        device_map={"": PartialState().process_index},
     )
     model.config.use_cache = False # silence the warnings. Please re-enable for inference!
     # model.config.pretraining_tp = 1
 
     # 그래디언트 체크포인팅 활성화
-    model.gradient_checkpointing_enable()
+    # model.gradient_checkpointing_enable()
 
     # Load tokenizer
     tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
