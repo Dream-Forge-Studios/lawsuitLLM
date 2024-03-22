@@ -1,7 +1,7 @@
 from accelerate import FullyShardedDataParallelPlugin, Accelerator
 from torch.distributed.fsdp.fully_sharded_data_parallel import FullOptimStateDictConfig, FullStateDictConfig
 
-new_model = "/data/llm/lawsuit-7B-pretain"
+new_model = "/data/llm/lawsuit-7B-pretain-r8"
 
 # accelerator
 fsdp_plugin = FullyShardedDataParallelPlugin(
@@ -116,8 +116,8 @@ run = wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training
 training_arguments_c = TrainingArguments(
     output_dir="./results",
     num_train_epochs=1,
-    per_device_train_batch_size=1,
-    gradient_accumulation_steps=2,
+    per_device_train_batch_size=4,
+    gradient_accumulation_steps=1,
     optim="paged_adamw_32bit",
     save_steps=1500,
     logging_dir="./logs",
