@@ -1,163 +1,163 @@
-# -*- coding: utf-8 -*-
+from accelerate import FullyShardedDataParallelPlugin, Accelerator
+from torch.distributed.fsdp.fully_sharded_data_parallel import FullOptimStateDictConfig, FullStateDictConfig
 
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig,DataCollatorForLanguageModeling,TrainingArguments, Trainer
-from peft import LoraConfig, prepare_model_for_kbit_training, get_peft_model
-import os, wandb
-from datasets import concatenate_datasets
-import torch
+new_model = "/data/llm/lawsuit-7B-pretain"
+
+# accelerator
+fsdp_plugin = FullyShardedDataParallelPlugin(
+    state_dict_config=FullStateDictConfig(offload_to_cpu=True, rank0_only=False),
+    optim_state_dict_config=FullOptimStateDictConfig(offload_to_cpu=True, rank0_only=False),
+)
+accelerator = Accelerator(fsdp_plugin=fsdp_plugin)
+
 from utils import hugging_precedents, korean_textbooks, ai_hub_precedents, law_qa_datas, law_translate_datas
-from accelerate import Accelerator, PartialState
-from torch.utils.data import DataLoader
-from torch.optim import AdamW
-from transformers import get_scheduler
+from datasets import concatenate_datasets
 
-def main():
-    base_model = "/data/llm/Synatra-7B-v0.3-dpo"
+#dataset
+processed_dataset = hugging_precedents()
+processed_dataset = processed_dataset.remove_columns(
+    [column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
+ai_hub_precedents_dataset = ai_hub_precedents()
+law_qa_dataset = law_qa_datas()
+law_translate_dataset = law_translate_datas()
 
-    cutoff_len = 4096
+textbooks_dataset = korean_textbooks(945, 'tiny-textbooks')
 
-    # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+# 48168개
+combined_dataset = concatenate_datasets(
+    [processed_dataset, ai_hub_precedents_dataset, law_qa_dataset, law_translate_dataset, textbooks_dataset]).shuffle()
 
-    current_device = torch.cuda.current_device()
-    print(f"Current CUDA Device: GPU {current_device}")
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
-    bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16,
-        bnb_4bit_use_double_quant=False,
+# base_model = "maywell/Synatra-7B-v0.3-dpo"
+base_model = "/data/llm/Synatra-7B-v0.3-dpo"
+# base_model = "D:\Synatra-7B-v0.3-dpo"
+
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_use_double_quant=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.bfloat16
+)
+model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=bnb_config)
+
+tokenizer = AutoTokenizer.from_pretrained(
+    base_model,
+    model_max_length=512,
+    padding_side="left",
+    add_eos_token=True)
+tokenizer.pad_token = tokenizer.eos_token
+
+cutoff_len = 4096
+
+def tokenize_function(examples):
+    return tokenizer(examples['input_text'], truncation=True, padding="max_length", max_length=cutoff_len)
+
+# 데이터셋 토큰화 적용
+tokenized_dataset = combined_dataset.map(tokenize_function, batched=True)
+
+from peft import prepare_model_for_kbit_training
+
+model.gradient_checkpointing_enable()
+model = prepare_model_for_kbit_training(model)
+
+
+def print_trainable_parameters(model):
+    """
+    Prints the number of trainable parameters in the model.
+    """
+    trainable_params = 0
+    all_param = 0
+    for _, param in model.named_parameters():
+        all_param += param.numel()
+        if param.requires_grad:
+            trainable_params += param.numel()
+    print(
+        f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}"
     )
 
-    model = AutoModelForCausalLM.from_pretrained(
-        base_model,
-        quantization_config=bnb_config,
-        device_map={"": PartialState().process_index},
-    )
-    model.config.use_cache = False # silence the warnings. Please re-enable for inference!
-    # model.config.pretraining_tp = 1
+from peft import LoraConfig, get_peft_model
+config = LoraConfig(
+    r=8,
+    lora_alpha=16,
+    target_modules=[
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj",
+        "lm_head",
+    ],
+    bias="none",
+    lora_dropout=0.05,  # Conventional
+    task_type="CAUSAL_LM",
+)
+model = get_peft_model(model, config)
+print_trainable_parameters(model)
+# Apply the accelerator. You can comment this out to remove the accelerator.
+model = accelerator.prepare_model(model)
 
-    # 그래디언트 체크포인팅 활성화
-    # model.gradient_checkpointing_enable()
+if torch.cuda.device_count() > 1: # If more than 1 GPU
+    model.is_parallelizable = True
+    model.model_parallel = True
 
-    # Load tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
-    tokenizer.add_eos_token = True
-    tokenizer.add_bos_token, tokenizer.add_eos_token
+from transformers import TrainingArguments, Trainer, DataCollatorForLanguageModeling
+import wandb
 
-    processed_dataset = hugging_precedents()
-    processed_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
-    ai_hub_precedents_dataset = ai_hub_precedents()
-    law_qa_dataset = law_qa_datas()
-    law_translate_dataset = law_translate_datas()
+with open('/data/llm/wandbKey_js.txt', 'r') as file:
+    wandb_key = file.read().strip()
 
-    # qa_dataset = ko_wikidata_QA(300)
-    textbooks_dataset = korean_textbooks(945, 'tiny-textbooks')
+wandb.login(key=wandb_key)
+run = wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training", anonymous="allow")
 
-    # 48168개
-    combined_dataset = concatenate_datasets([processed_dataset, ai_hub_precedents_dataset, law_qa_dataset, law_translate_dataset, textbooks_dataset])
+training_arguments_c = TrainingArguments(
+    output_dir="./results",
+    num_train_epochs=1,
+    per_device_train_batch_size=1,
+    gradient_accumulation_steps=4,
+    optim="paged_adamw_32bit",
+    save_steps=1500,
+    logging_dir="./logs",
+    logging_steps= 250,
+    learning_rate=2e-4,
+    weight_decay=0.001,
+    fp16=True,
+    bf16=False,
+    max_grad_norm=0.3,
+    max_steps=-1,
+    warmup_ratio=0.3,
+    group_by_length=True,
+    lr_scheduler_type="cosine",
+    report_to="wandb"
+)
 
-    def tokenize_function(examples):
-        return tokenizer(examples['input_text'], truncation=True, padding=True, max_length=cutoff_len)
+data_collator = DataCollatorForLanguageModeling(
+    tokenizer, mlm=False, pad_to_multiple_of=8, return_tensors="pt"
+)
 
-    # 데이터셋 토큰화 적용
-    tokenized_dataset = combined_dataset.map(tokenize_function, batched=True)
+trainer = Trainer(
+    model=model,
+    args=training_arguments_c,
+    train_dataset=tokenized_dataset,
+    eval_dataset=None,
+    tokenizer=tokenizer,
+    data_collator=data_collator,
+)
 
-    # model = prepare_model_for_kbit_training(model)
-    peft_config = LoraConfig(
-            r=16,
-            lora_alpha=16,
-            lora_dropout=0.1,
-            bias="none",
-            task_type="CAUSAL_LM",
-            target_modules=["q_proj", "k_proj", "v_proj", "o_proj","gate_proj"]
-        )
-    model = get_peft_model(model, peft_config)
+print(trainer.args)
 
-    with open('/data/llm/wandbKey_js.txt', 'r') as file:
-        wandb_key = file.read().strip()
+# 사용 가능한 GPU 개수 확인
+num_gpus = torch.cuda.device_count()
 
-    wandb.login(key = wandb_key)
-    wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training", anonymous="allow")
+# 사용 가능한 GPU 개수 로깅
+print(f"Using {num_gpus} GPUs for training.")
 
-    # Training Arguments
-    # Hyperparameters should beadjusted based on the hardware you using
-    output_dir = "./results"
-    num_train_epochs = 1
-    gradient_accumulation_steps = 4
-    save_steps = 1500
-    logging_steps = 1
-    learning_rate = 2e-4
-    weight_decay = 0.001
-    max_grad_norm = 0.3
-    warmup_ratio = 0.3
-    lr_scheduler_type = "cosine_with_restarts"
+model.config.use_cache = False  # silence the warnings. Please re-enable for inference!
+trainer.train()
 
-    data_collator = DataCollatorForLanguageModeling(
-            tokenizer, mlm=False, pad_to_multiple_of=8, return_tensors="pt"
-        )
-    # DataLoader 설정
-    batch_size = 16  # 배치 사이즈 설정
-    train_dataloader = DataLoader(
-        tokenized_dataset,  # 학습 데이터셋 사용
-        shuffle=True,  # 데이터셋 셔플
-        batch_size=batch_size,  # 배치 사이즈 설정
-        collate_fn=data_collator,  # 데이터 콜레이터 사용
-    )
-    optimizer = AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    # Accelerator 초기화
-    accelerator = Accelerator()
-
-    # 모델, 옵티마이저, 데이터 로더 준비
-    model, optimizer, train_dataloader = accelerator.prepare(
-        model, optimizer, train_dataloader
-    )
-
-    num_epochs = 1
-    num_training_steps = num_epochs * len(train_dataloader)
-    # 웜업 스텝 계산
-    num_warmup_steps = int(warmup_ratio * num_training_steps)
-    lr_scheduler = get_scheduler(
-        lr_scheduler_type,
-        optimizer=optimizer,
-        num_warmup_steps=num_warmup_steps,
-        num_training_steps=num_training_steps
-    )
-
-    for epoch in range(num_epochs):
-        model.train()
-        for step, batch in enumerate(train_dataloader):
-            outputs = model(**batch)
-            loss = outputs.loss
-            accelerator.backward(loss)
-
-            # 그래디언트 누적을 사용하여 일정 스텝마다 가중치를 업데이트합니다.
-            if (step + 1) % gradient_accumulation_steps == 0:
-                # 최대 그래디언트 노름을 사용하여 그래디언트 클리핑을 적용합니다.
-                accelerator.clip_grad_norm_(model.parameters(), max_norm=max_grad_norm)
-                optimizer.step()
-                lr_scheduler.step()
-                optimizer.zero_grad()
-
-            # Weights & Biases에 학습 손실 등의 메트릭을 로깅합니다.
-            if accelerator.is_main_process and (step + 1) % logging_steps == 0:
-                wandb.log({"loss": loss.item(), "global_step": step + 1, "epoch": epoch + 1})
-
-            # 주어진 스텝마다 체크포인트를 저장합니다.
-            if (step + 1) % save_steps == 0 and step > 0:
-                if accelerator.is_main_process:
-                    model_save_path = os.path.join(output_dir, f"checkpoint_epoch_{epoch + 1}_step_{step + 1}")
-                    model.save_pretrained(model_save_path)
-                    tokenizer.save_pretrained(model_save_path)
-
-    if accelerator.is_main_process:
-        # 최종 모델 저장
-        model_save_path = os.path.join(output_dir, "final_model")
-        model.save_pretrained(model_save_path)
-        tokenizer.save_pretrained(model_save_path)
-
-        # Weights & Biases 세션 종료
-        wandb.finish()
-
-
-if __name__ == "__main__":
-    main()
+# Save the fine-tuned model
+trainer.model.save_pretrained(new_model)
+wandb.finish()
