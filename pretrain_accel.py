@@ -31,7 +31,6 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
         quantization_config=bnb_config,
-        device_map={'': torch.cuda.current_device()}
     )
     model.config.use_cache = False # silence the warnings. Please re-enable for inference!
     # model.config.pretraining_tp = 1
@@ -106,6 +105,8 @@ def main():
     optimizer = AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     # Accelerator 초기화
     accelerator = Accelerator()
+
+    model.to(accelerator.device)
 
     # 모델, 옵티마이저, 데이터 로더 준비
     model, optimizer, train_dataloader = accelerator.prepare(
