@@ -6,7 +6,7 @@ import os, wandb
 from datasets import concatenate_datasets
 import torch
 from utils import hugging_precedents, korean_textbooks, ai_hub_precedents, law_qa_datas, law_translate_datas
-from accelerate import Accelerator
+from accelerate import Accelerator, PartialState
 from torch.utils.data import DataLoader
 from torch.optim import AdamW
 from transformers import get_scheduler
@@ -16,7 +16,7 @@ def main():
 
     cutoff_len = 4096
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+    # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
     current_device = torch.cuda.current_device()
     print(f"Current CUDA Device: GPU {current_device}")
@@ -31,6 +31,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
         quantization_config=bnb_config,
+        # device_map={"": PartialState().process_index},
     )
     model.config.use_cache = False # silence the warnings. Please re-enable for inference!
     # model.config.pretraining_tp = 1
@@ -105,8 +106,6 @@ def main():
     optimizer = AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     # Accelerator 초기화
     accelerator = Accelerator()
-
-    model.to(accelerator.device)
 
     # 모델, 옵티마이저, 데이터 로더 준비
     model, optimizer, train_dataloader = accelerator.prepare(
