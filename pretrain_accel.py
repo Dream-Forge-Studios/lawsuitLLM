@@ -126,7 +126,7 @@ with open('/data/llm/wandbKey_js.txt', 'r') as file:
 wandb.login(key=wandb_key)
 run = wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training", anonymous="allow")
 
-model.config.use_cache = False  # silence the warnings. Please re-enable for inference!
+# model.config.use_cache = False  # silence the warnings. Please re-enable for inference!
 
 training_arguments_c = TrainingArguments(
     output_dir="/data/save_steps",
