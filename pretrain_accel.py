@@ -21,11 +21,15 @@ ai_hub_precedents_dataset = ai_hub_precedents()
 law_qa_dataset = law_qa_datas()
 law_translate_dataset = law_translate_datas()
 
-textbooks_dataset = korean_textbooks(945, 'tiny-textbooks')
+# textbooks_dataset = korean_textbooks(945, 'tiny-textbooks')
+textbooks_dataset = korean_textbooks(200, 'tiny-textbooks')
+textbooks_dataset = textbooks_dataset.remove_columns(
+    [column_name for column_name in textbooks_dataset.column_names if column_name != 'input_text'])
 
 # 48168개
 combined_dataset = concatenate_datasets(
     [processed_dataset, ai_hub_precedents_dataset, law_qa_dataset, law_translate_dataset, textbooks_dataset]).shuffle()
+combined_dataset = combined_dataset.select(range(10000))
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
