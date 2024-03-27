@@ -51,14 +51,13 @@ model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=bnb
 
 cutoff_len = 4096
 
-tokenizer = AutoTokenizer.from_pretrained(
-    base_model,
-    model_max_length=cutoff_len,
-    padding_side="left",
-    add_eos_token=True)
+# tokenizer = AutoTokenizer.from_pretrained(
+#     base_model,
+#     model_max_length=cutoff_len,
+#     padding_side="left",
+#     add_eos_token=True)
+tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
-
-
 
 def tokenize_function(examples):
     return tokenizer(examples['input_text'], truncation=True, padding="max_length", max_length=cutoff_len)
@@ -130,21 +129,10 @@ run = wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training
 training_arguments_c = TrainingArguments(
     output_dir="/data/save_steps",
     num_train_epochs=1,
-    per_device_train_batch_size=1,
-    gradient_accumulation_steps=4,
-    optim="paged_adamw_32bit",
+    deepspeed="deepspeed_config.json",
     save_steps=2500,
     logging_dir="./logs",
     logging_steps= 250,
-    learning_rate=2e-4,
-    weight_decay=0.001,
-    fp16=True,
-    bf16=False,
-    max_grad_norm=0.3,
-    max_steps=-1,
-    warmup_ratio=0.3,
-    group_by_length=True,
-    lr_scheduler_type="cosine",
     report_to="wandb"
 )
 
