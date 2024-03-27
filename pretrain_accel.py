@@ -2,16 +2,17 @@ from accelerate import FullyShardedDataParallelPlugin, Accelerator
 from torch.distributed.fsdp.fully_sharded_data_parallel import FullOptimStateDictConfig, FullStateDictConfig
 import os
 
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
+# os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
 
 new_model = "/data/llm/lawsuit-7B-pretain-r8"
 
 # accelerator
-fsdp_plugin = FullyShardedDataParallelPlugin(
-    state_dict_config=FullStateDictConfig(offload_to_cpu=True, rank0_only=False),
-    optim_state_dict_config=FullOptimStateDictConfig(offload_to_cpu=True, rank0_only=False),
-)
-accelerator = Accelerator(fsdp_plugin=fsdp_plugin)
+# fsdp_plugin = FullyShardedDataParallelPlugin(
+#     state_dict_config=FullStateDictConfig(offload_to_cpu=True, rank0_only=False),
+#     optim_state_dict_config=FullOptimStateDictConfig(offload_to_cpu=True, rank0_only=False),
+# )
+# accelerator = Accelerator(fsdp_plugin=fsdp_plugin)
+accelerator = Accelerator()
 
 from utils import hugging_precedents, korean_textbooks, ai_hub_precedents, law_qa_datas, law_translate_datas
 from datasets import concatenate_datasets
