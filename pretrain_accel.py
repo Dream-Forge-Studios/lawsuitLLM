@@ -129,10 +129,19 @@ run = wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training
 training_arguments_c = TrainingArguments(
     output_dir="/data/save_steps",
     num_train_epochs=1,
+    per_device_train_batch_size=1,
+    gradient_accumulation_steps=4,
     deepspeed="deepspeed_config.json",
     save_steps=2500,
     logging_dir="./logs",
     logging_steps= 250,
+    learning_rate=1e-05,
+    weight_decay=0.1,
+    fp16=True,
+    bf16=False,
+    max_grad_norm=1,
+    max_steps=-1,
+    warmup_ratio=0.1,
     report_to="wandb"
 )
 
