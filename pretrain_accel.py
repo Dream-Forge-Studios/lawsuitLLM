@@ -113,10 +113,9 @@ print_trainable_parameters(model)
 # Accelerator prepares model and other components
 model, tokenizer, tokenized_dataset = accelerator.prepare(model, tokenizer, tokenized_dataset)
 
-
-if torch.cuda.device_count() > 1: # If more than 1 GPU
-    model.is_parallelizable = True
-    model.model_parallel = True
+# if torch.cuda.device_count() > 1: # If more than 1 GPU
+#     model.is_parallelizable = True
+#     model.model_parallel = True
 
 from transformers import TrainingArguments, Trainer, DataCollatorForLanguageModeling
 import wandb
@@ -126,6 +125,8 @@ with open('/data/llm/wandbKey_js.txt', 'r') as file:
 
 wandb.login(key=wandb_key)
 run = wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training", anonymous="allow")
+
+model.config.use_cache = False  # silence the warnings. Please re-enable for inference!
 
 training_arguments_c = TrainingArguments(
     output_dir="/data/save_steps",
@@ -145,6 +146,7 @@ training_arguments_c = TrainingArguments(
     warmup_ratio=0.1,
     report_to="wandb"
 )
+
 
 data_collator = DataCollatorForLanguageModeling(
     tokenizer, mlm=False, pad_to_multiple_of=8, return_tensors="pt"
@@ -166,8 +168,6 @@ num_gpus = torch.cuda.device_count()
 
 # 사용 가능한 GPU 개수 로깅
 print(f"Using {num_gpus} GPUs for training.")
-
-model.config.use_cache = False  # silence the warnings. Please re-enable for inference!
 
 # 학습 전 메모리 정리
 torch.cuda.empty_cache()
