@@ -56,7 +56,7 @@ def main():
         device_map="auto"
     )
     model.config.use_cache = False # silence the warnings. Please re-enable for inference!
-    model.config.pretraining_tp = 4
+    # model.config.pretraining_tp = 4
 
     # 그래디언트 체크포인팅 활성화
     # model.gradient_checkpointing_enable()
@@ -77,11 +77,13 @@ def main():
     law_translate_dataset = law_translate_datas()
 
     # qa_dataset = ko_wikidata_QA(300)
-    textbooks_dataset = korean_textbooks(945, 'tiny-textbooks')
+    # textbooks_dataset = korean_textbooks(945, 'tiny-textbooks')
+    textbooks_dataset = korean_textbooks(200, 'tiny-textbooks')
+    textbooks_dataset = textbooks_dataset.remove_columns([column_name for column_name in textbooks_dataset.column_names if column_name != 'input_text'])
 
     # 48168개
     combined_dataset = concatenate_datasets([processed_dataset, ai_hub_precedents_dataset, law_qa_dataset, law_translate_dataset, textbooks_dataset]).shuffle()
-
+    combined_dataset = combined_dataset.select(range(10000))
     # 원본 데이터셋의 다른 열을 제거하고 'input_text'만 남깁니다.
     # final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
     # final_dataset = combined_dataset.remove_columns([column_name for column_name in combined_dataset.column_names if column_name != 'input_text'])
@@ -162,7 +164,7 @@ def main():
         logging_steps= 1,
         learning_rate=2e-4,
         weight_decay=0.001,
-        fp16=True,
+        fp16=False,
         bf16=False,
         max_grad_norm=0.3,
         max_steps=-1,
