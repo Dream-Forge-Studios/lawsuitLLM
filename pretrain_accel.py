@@ -32,7 +32,7 @@ textbooks_dataset = textbooks_dataset.remove_columns(
 # 48168개
 combined_dataset = concatenate_datasets(
     [processed_dataset, ai_hub_precedents_dataset, law_qa_dataset, law_translate_dataset, textbooks_dataset]).shuffle()
-combined_dataset = combined_dataset.select(range(5000))
+combined_dataset = combined_dataset.select(range(200))
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
