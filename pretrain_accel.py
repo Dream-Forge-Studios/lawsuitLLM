@@ -46,14 +46,16 @@ bnb_config = BitsAndBytesConfig(
 )
 model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=bnb_config)
 
+cutoff_len = 4096
+
 tokenizer = AutoTokenizer.from_pretrained(
     base_model,
-    model_max_length=512,
+    model_max_length=cutoff_len,
     padding_side="left",
     add_eos_token=True)
 tokenizer.pad_token = tokenizer.eos_token
 
-cutoff_len = 4096
+
 
 def tokenize_function(examples):
     return tokenizer(examples['input_text'], truncation=True, padding="max_length", max_length=cutoff_len)
@@ -160,7 +162,16 @@ num_gpus = torch.cuda.device_count()
 print(f"Using {num_gpus} GPUs for training.")
 
 model.config.use_cache = False  # silence the warnings. Please re-enable for inference!
+
+# 학습 전 메모리 정리
+torch.cuda.empty_cache()
+print("Cleared CUDA cache before training.")
+
 trainer.train()
+
+# 학습 후 메모리 정리
+torch.cuda.empty_cache()
+print("Cleared CUDA cache after training.")
 
 # Save the fine-tuned model
 trainer.model.save_pretrained(new_model)
