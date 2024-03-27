@@ -32,7 +32,7 @@ textbooks_dataset = textbooks_dataset.remove_columns(
 # 48168개
 combined_dataset = concatenate_datasets(
     [processed_dataset, ai_hub_precedents_dataset, law_qa_dataset, law_translate_dataset, textbooks_dataset]).shuffle()
-combined_dataset = combined_dataset.select(range(10000))
+combined_dataset = combined_dataset.select(range(5000))
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
@@ -69,7 +69,7 @@ tokenized_dataset = combined_dataset.map(tokenize_function, batched=True)
 from peft import prepare_model_for_kbit_training
 
 # Prepare model for k-bit training
-model.gradient_checkpointing_enable(use_reentrant=False)  # Explicitly setting use_reentrant
+model.gradient_checkpointing_enable()
 model = prepare_model_for_kbit_training(model)
 
 def print_trainable_parameters(model):
@@ -131,7 +131,7 @@ training_arguments_c = TrainingArguments(
     output_dir="/data/save_steps",
     num_train_epochs=1,
     per_device_train_batch_size=1,
-    gradient_accumulation_steps=2,
+    gradient_accumulation_steps=4,
     optim="paged_adamw_32bit",
     save_steps=2500,
     logging_dir="./logs",
