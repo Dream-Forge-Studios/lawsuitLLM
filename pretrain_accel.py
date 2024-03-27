@@ -68,9 +68,9 @@ tokenized_dataset = combined_dataset.map(tokenize_function, batched=True)
 
 from peft import prepare_model_for_kbit_training
 
-model.gradient_checkpointing_enable()
+# Prepare model for k-bit training
+model.gradient_checkpointing_enable(use_reentrant=False)  # Explicitly setting use_reentrant
 model = prepare_model_for_kbit_training(model)
-
 
 def print_trainable_parameters(model):
     """
@@ -106,8 +106,13 @@ config = LoraConfig(
 )
 model = get_peft_model(model, config)
 print_trainable_parameters(model)
-# Apply the accelerator. You can comment this out to remove the accelerator.
-model = accelerator.prepare_model(model)
+
+# # Apply the accelerator. You can comment this out to remove the accelerator.
+# model = accelerator.prepare_model(model)
+
+# Accelerator prepares model and other components
+model, tokenizer, tokenized_dataset = accelerator.prepare(model, tokenizer, tokenized_dataset)
+
 
 if torch.cuda.device_count() > 1: # If more than 1 GPU
     model.is_parallelizable = True
@@ -126,7 +131,7 @@ training_arguments_c = TrainingArguments(
     output_dir="/data/save_steps",
     num_train_epochs=1,
     per_device_train_batch_size=1,
-    gradient_accumulation_steps=4,
+    gradient_accumulation_steps=2,
     optim="paged_adamw_32bit",
     save_steps=2500,
     logging_dir="./logs",
