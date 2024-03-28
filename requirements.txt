@@ -36,7 +36,7 @@ peft @ git+https://github.com/huggingface/peft.git@d56df7fc64222e7844b4dde27668d
 Pillow==9.5.0
 protobuf==4.24.4
 psutil==5.9.6
-pyarrow==14.0.1
+pyarrow==12.0.1
 pyarrow-hotfix==0.6
 Pygments==2.17.2
 python-dateutil==2.8.2
