@@ -58,7 +58,7 @@ tokenizers==0.15.0
 tqdm==4.66.1
 transformers @ git+https://github.com/huggingface/transformers.git@9660e27cd0ada58b60d7e6ea0558c878c5e20580
 trl==0.7.4
-typing_extensions==4.8.0
+typing_extensions==4.7.1
 tyro==0.6.0
 tzdata==2023.3
 urllib3==2.1.0
