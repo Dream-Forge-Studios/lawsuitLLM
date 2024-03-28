@@ -1,5 +1,4 @@
 accelerate @ git+https://github.com/huggingface/accelerate.git@6a4857fec2bbae83880014cfd834d8a3e22de68b
-aiohttp==3.9.1
 aiohttp==3.8.5
 aiosignal==1.3.1
 appdirs==1.4.4
