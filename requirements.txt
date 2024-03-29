@@ -27,7 +27,7 @@ MarkupSafe==2.1.3
 mdurl==0.1.2
 mpmath==1.3.0
 multidict==6.0.4
-multiprocess==0.52.1
+multiprocess==0.70.1
 networkx==2.6.3
 numpy==1.21.6
 packaging==23.2
