@@ -83,7 +83,7 @@ def main():
 
     # 48168개
     combined_dataset = concatenate_datasets([processed_dataset, ai_hub_precedents_dataset, law_qa_dataset, law_translate_dataset, textbooks_dataset]).shuffle()
-    combined_dataset = combined_dataset.select(range(10000))
+    combined_dataset = combined_dataset.select(range(1000))
     # 원본 데이터셋의 다른 열을 제거하고 'input_text'만 남깁니다.
     # final_dataset = processed_dataset.remove_columns([column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
     # final_dataset = combined_dataset.remove_columns([column_name for column_name in combined_dataset.column_names if column_name != 'input_text'])
@@ -153,15 +153,14 @@ def main():
     #     deepspeed="deepspeed_config.json"  # DeepSpeed 설정 파일 참조
     # )
     training_arguments_c = TrainingArguments(
-        output_dir= "./results",
+        output_dir= "/data/save_steps",
         num_train_epochs= 1,
         per_device_train_batch_size= 1,
         gradient_accumulation_steps= 4,
         optim = "paged_adamw_32bit",
-        save_steps= 1500,
+        save_steps= 10,
         logging_dir="./logs",
-        # logging_steps= 250,
-        logging_steps= 1,
+        logging_steps= 10,
         learning_rate=2e-4,
         weight_decay=0.001,
         fp16=False,
