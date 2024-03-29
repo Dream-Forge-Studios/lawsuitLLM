@@ -18,7 +18,7 @@ def main():
     # base_model = "maywell/Synatra-7B-v0.3-dpo"
     base_model = "/data/llm/Synatra-7B-v0.3-dpo"
     # base_model = "D:\Synatra-7B-v0.3-dpo"
-    dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-pretain"
+    dataset_name, new_model = "joonhok-exo-ai/korean_law_open_data_precedents", "/data/llm/lawsuit-7B-pretain-1000"
     dataset_name2 = 'maywell/korean_textbooks'
     # dataset_name2 = 'maywell/ko_wikidata_QA'
 
@@ -153,13 +153,13 @@ def main():
     #     deepspeed="deepspeed_config.json"  # DeepSpeed 설정 파일 참조
     # )
     training_arguments_c = TrainingArguments(
-        output_dir= "/data/save_steps",
+        output_dir= "/data/save_steps/pretain-1000",
         num_train_epochs= 1,
         per_device_train_batch_size= 1,
         gradient_accumulation_steps= 4,
         optim = "paged_adamw_32bit",
-        save_steps= 10,
-        logging_dir="./logs",
+        save_steps= 100,
+        logging_dir="/data/logs/pretain-1000",
         logging_steps= 10,
         learning_rate=2e-4,
         weight_decay=0.001,
