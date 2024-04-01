@@ -61,7 +61,7 @@ tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
 
 def tokenize_function(examples):
-    return tokenizer(examples['input_text'], truncation=True, padding="max_length", max_length=cutoff_len)
+    return tokenizer(examples['input_text'], truncation=True, padding="max_length", max_length=cutoff_len, return_tensors="pt")
 
 # 데이터셋 토큰화 적용
 tokenized_dataset = combined_dataset.map(tokenize_function, batched=True)
@@ -162,12 +162,6 @@ trainer = Trainer(
 )
 
 print(trainer.args)
-
-# 사용 가능한 GPU 개수 확인
-num_gpus = torch.cuda.device_count()
-
-# 사용 가능한 GPU 개수 로깅
-print(f"Using {num_gpus} GPUs for training.")
 
 # 학습 전 메모리 정리
 torch.cuda.empty_cache()
