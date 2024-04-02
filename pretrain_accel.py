@@ -32,7 +32,15 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
-# base_model = "D:\Synatra-7B-v0.3-dpo"
+base_model = "D:\Synatra-7B-v0.3-dpo"
+
+# accelerator
+# fsdp_plugin = FullyShardedDataParallelPlugin(
+#     state_dict_config=FullStateDictConfig(offload_to_cpu=True, rank0_only=False),
+#     optim_state_dict_config=FullOptimStateDictConfig(offload_to_cpu=True, rank0_only=False),
+# )
+# accelerator = Accelerator(fsdp_plugin=fsdp_plugin)
+accelerator = Accelerator()
 
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
@@ -40,7 +48,10 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_quant_type="nf4",
     bnb_4bit_compute_dtype=torch.bfloat16
 )
-model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=bnb_config)
+model = AutoModelForCausalLM.from_pretrained(
+    base_model,
+    quantization_config=bnb_config,
+    device_map = {"": accelerator.local_process_index})
 
 cutoff_len = 4096
 
@@ -98,14 +109,6 @@ config = LoraConfig(
 )
 model = get_peft_model(model, config)
 print_trainable_parameters(model)
-
-# accelerator
-# fsdp_plugin = FullyShardedDataParallelPlugin(
-#     state_dict_config=FullStateDictConfig(offload_to_cpu=True, rank0_only=False),
-#     optim_state_dict_config=FullOptimStateDictConfig(offload_to_cpu=True, rank0_only=False),
-# )
-# accelerator = Accelerator(fsdp_plugin=fsdp_plugin)
-accelerator = Accelerator()
 
 # # Apply the accelerator. You can comment this out to remove the accelerator.
 # model = accelerator.prepare_model(model)
