@@ -54,7 +54,7 @@ device_map = {"": Accelerator().local_process_index}
 torch_dtype = torch.bfloat16
 
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
-base_model = "D:\Synatra-7B-v0.3-dpo"
+# base_model = "D:\Synatra-7B-v0.3-dpo"
 
 model = AutoModelForCausalLM.from_pretrained(
     base_model,
