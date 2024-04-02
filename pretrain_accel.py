@@ -6,14 +6,6 @@ import os
 
 new_model = "/data/llm/lawsuit-7B-pretain-r8"
 
-# accelerator
-# fsdp_plugin = FullyShardedDataParallelPlugin(
-#     state_dict_config=FullStateDictConfig(offload_to_cpu=True, rank0_only=False),
-#     optim_state_dict_config=FullOptimStateDictConfig(offload_to_cpu=True, rank0_only=False),
-# )
-# accelerator = Accelerator(fsdp_plugin=fsdp_plugin)
-accelerator = Accelerator()
-
 from utils import hugging_precedents, korean_textbooks, ai_hub_precedents, law_qa_datas, law_translate_datas
 from datasets import concatenate_datasets
 
@@ -61,7 +53,7 @@ tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
 
 def tokenize_function(examples):
-    return tokenizer(examples['input_text'], truncation=True, padding="max_length", max_length=cutoff_len, return_tensors="pt")
+    return tokenizer(examples['input_text'], truncation=True, padding="max_length", max_length=cutoff_len)
 
 # 데이터셋 토큰화 적용
 tokenized_dataset = combined_dataset.map(tokenize_function, batched=True)
@@ -107,6 +99,14 @@ config = LoraConfig(
 model = get_peft_model(model, config)
 print_trainable_parameters(model)
 
+# accelerator
+# fsdp_plugin = FullyShardedDataParallelPlugin(
+#     state_dict_config=FullStateDictConfig(offload_to_cpu=True, rank0_only=False),
+#     optim_state_dict_config=FullOptimStateDictConfig(offload_to_cpu=True, rank0_only=False),
+# )
+# accelerator = Accelerator(fsdp_plugin=fsdp_plugin)
+accelerator = Accelerator()
+
 # # Apply the accelerator. You can comment this out to remove the accelerator.
 # model = accelerator.prepare_model(model)
 
@@ -134,9 +134,9 @@ training_arguments_c = TrainingArguments(
     per_device_train_batch_size=1,
     gradient_accumulation_steps=4,
     deepspeed="deepspeed_config.json",
-    save_steps=2500,
+    save_steps=50,
     logging_dir="./logs",
-    logging_steps= 250,
+    logging_steps= 10,
     learning_rate=1e-05,
     weight_decay=0.1,
     fp16=True,
