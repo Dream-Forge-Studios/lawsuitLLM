@@ -82,6 +82,7 @@ training_arguments_c = TrainingArguments(
     max_grad_norm=1,
     max_steps=-1,
     warmup_ratio=0.1,
+    remove_unused_columns=False,
     report_to="wandb"
 )
 
