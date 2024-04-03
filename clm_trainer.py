@@ -43,7 +43,7 @@ combined_dataset = combined_dataset.select(range(10000))
 def tokenize_function(examples):
     return tokenizer(examples['input_text'], truncation=True, padding="max_length", max_length=cutoff_len)
 
-tokenized_dataset = combined_dataset.map(tokenize_function, num_proc=4, remove_columns=["id", "data"])
+tokenized_dataset = combined_dataset.map(tokenize_function, num_proc=4)
 
 # Step 2: Load the model
 bnb_config = BitsAndBytesConfig(
