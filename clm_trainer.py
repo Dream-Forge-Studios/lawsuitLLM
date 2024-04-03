@@ -8,6 +8,9 @@ from peft import LoraConfig
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig, HfArgumentParser, AutoTokenizer, TrainingArguments, Trainer, DataCollatorForLanguageModeling
 
+base_model = "/data/llm/Synatra-7B-v0.3-dpo"
+# base_model = "D:\Synatra-7B-v0.3-dpo"
+
 new_model = "/data/llm/lawsuit-7B-pretain-r8"
 
 cutoff_len = 4096
@@ -15,7 +18,7 @@ cutoff_len = 4096
 tqdm.pandas()
 
 # Step 1: Load the dataset
-tokenizer = AutoTokenizer.from_pretrained(new_model)
+tokenizer = AutoTokenizer.from_pretrained(base_model)
 
 from utils import hugging_precedents, korean_textbooks, ai_hub_precedents, law_qa_datas, law_translate_datas
 from datasets import concatenate_datasets
@@ -52,9 +55,6 @@ bnb_config = BitsAndBytesConfig(
 # Copy the model to each device
 device_map = {"": Accelerator().local_process_index}
 torch_dtype = torch.bfloat16
-
-base_model = "/data/llm/Synatra-7B-v0.3-dpo"
-# base_model = "D:\Synatra-7B-v0.3-dpo"
 
 model = AutoModelForCausalLM.from_pretrained(
     base_model,
