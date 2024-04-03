@@ -4,7 +4,7 @@ from typing import Optional
 import torch
 from accelerate import Accelerator
 from datasets import load_dataset
-from peft import LoraConfig
+from peft import LoraConfig, get_peft_model
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig, HfArgumentParser, AutoTokenizer, TrainingArguments, Trainer, DataCollatorForLanguageModeling
 
@@ -105,7 +105,7 @@ peft_config = LoraConfig(
     lora_dropout=0.05,  # Conventional
     task_type="CAUSAL_LM",
 )
-
+model = get_peft_model(model, peft_config)
 
 # Step 5: Define the Trainer
 data_collator = DataCollatorForLanguageModeling(
