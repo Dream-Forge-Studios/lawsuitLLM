@@ -32,7 +32,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
-# base_model = "D:\Synatra-7B-v0.3-dpo"
+base_model = "D:\Synatra-7B-v0.3-dpo"
 
 # accelerator
 # fsdp_plugin = FullyShardedDataParallelPlugin(
@@ -68,6 +68,7 @@ def tokenize_function(examples):
 
 # 데이터셋 토큰화 적용
 tokenized_dataset = combined_dataset.map(tokenize_function, batched=True)
+tokenized_dataset = tokenized_dataset.remove_columns(["input_text"])
 
 from peft import prepare_model_for_kbit_training
 
