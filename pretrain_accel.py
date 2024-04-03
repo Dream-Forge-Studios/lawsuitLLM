@@ -64,7 +64,7 @@ tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
 
 def tokenize_function(examples):
-    return tokenizer(examples['input_text'], truncation=True, padding="max_length", max_length=cutoff_len)
+    return tokenizer(examples['input_text'], truncation=True, padding="max_length", max_length=cutoff_len, return_tensors="pt")
 
 # 데이터셋 토큰화 적용
 tokenized_dataset = combined_dataset.map(tokenize_function, batched=True)
