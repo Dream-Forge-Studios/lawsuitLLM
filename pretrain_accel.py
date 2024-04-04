@@ -168,7 +168,7 @@ training_arguments_one_doc = TrainingArguments(
     gradient_accumulation_steps=1,
     deepspeed="deepspeed_one_config.json",
     optim="adamw_torch",
-    save_steps=10,
+    save_steps=2,
     logging_steps=1,
     learning_rate=1e-05,
     weight_decay=0.1,
@@ -207,5 +207,10 @@ torch.cuda.empty_cache()
 print("Cleared CUDA cache after training.")
 
 # Save the fine-tuned model
-trainer.model.save_pretrained(new_model)
+if hasattr(trainer.model, 'module'):
+    original_model = trainer.model.module
+else:
+    original_model = trainer.model
+
+original_model.save_pretrained(new_model)
 wandb.finish()
