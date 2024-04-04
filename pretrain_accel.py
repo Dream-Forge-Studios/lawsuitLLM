@@ -163,14 +163,14 @@ training_arguments_c = TrainingArguments(
 
 training_arguments_one_doc = TrainingArguments(
     output_dir="/data/doc_save_steps",
-    num_train_epochs=20,
+    num_train_epochs=200,
     per_device_train_batch_size=1,
     gradient_accumulation_steps=1,
     deepspeed="deepspeed_one_config.json",
     optim="adamw_torch",
-    save_steps=2,
+    save_steps=50,
     logging_steps=1,
-    learning_rate=1e-05,
+    learning_rate=5e-05,
     weight_decay=0.1,
     fp16=False,
     bf16=False,
