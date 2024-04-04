@@ -6,7 +6,7 @@ import pandas as pd
 from datasets import Dataset
 
 new_model = "/data/llm/lawsuit-7B-pretain-r8"
-new_model = r"/data/docLLM/sangbul-e20"
+new_model = r"/data/docLLM/sangbul-e200"
 
 from utils import hugging_precedents, korean_textbooks, ai_hub_precedents, law_qa_datas, law_translate_datas
 from datasets import concatenate_datasets
