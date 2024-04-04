@@ -6,7 +6,7 @@ import pandas as pd
 from datasets import Dataset
 
 new_model = "/data/llm/lawsuit-7B-pretain-r8"
-new_model = r"D:\docChatbot\sangbul-e20"
+new_model = r"/data/docLLM/sangbul-e20"
 
 from utils import hugging_precedents, korean_textbooks, ai_hub_precedents, law_qa_datas, law_translate_datas
 from datasets import concatenate_datasets
@@ -162,7 +162,7 @@ training_arguments_c = TrainingArguments(
 )
 
 training_arguments_one_doc = TrainingArguments(
-    output_dir="./results",
+    output_dir="/data/doc_save_steps",
     num_train_epochs=20,
     per_device_train_batch_size=1,
     gradient_accumulation_steps=1,
