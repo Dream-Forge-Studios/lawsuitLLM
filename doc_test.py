@@ -9,7 +9,7 @@ import click
 @click.command()
 @click.option('--new_model', help='새로운 모델의 이름을 입력합니다.')
 def main(new_model):
-    base_model = "/data/Synatra-7B-v0.3-dpo"
+    base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
