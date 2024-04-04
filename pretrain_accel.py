@@ -1,31 +1,40 @@
 from accelerate import FullyShardedDataParallelPlugin, Accelerator
 from torch.distributed.fsdp.fully_sharded_data_parallel import FullOptimStateDictConfig, FullStateDictConfig
 import os
-
-# os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
+import json
+import pandas as pd
+from datasets import Dataset
 
 new_model = "/data/llm/lawsuit-7B-pretain-r8"
+new_model = r"D:\docChatbot\sangbul-e20"
 
 from utils import hugging_precedents, korean_textbooks, ai_hub_precedents, law_qa_datas, law_translate_datas
 from datasets import concatenate_datasets
 
-#dataset
-processed_dataset = hugging_precedents()
-processed_dataset = processed_dataset.remove_columns(
-    [column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
-ai_hub_precedents_dataset = ai_hub_precedents()
-law_qa_dataset = law_qa_datas()
-law_translate_dataset = law_translate_datas()
+#law dataset
+# processed_dataset = hugging_precedents()
+# processed_dataset = processed_dataset.remove_columns(
+#     [column_name for column_name in processed_dataset.column_names if column_name != 'input_text'])
+# ai_hub_precedents_dataset = ai_hub_precedents()
+# law_qa_dataset = law_qa_datas()
+# law_translate_dataset = law_translate_datas()
+#
+# textbooks_dataset = korean_textbooks(945, 'tiny-textbooks')
+# # textbooks_dataset = korean_textbooks(200, 'tiny-textbooks')
+# textbooks_dataset = textbooks_dataset.remove_columns(
+#     [column_name for column_name in textbooks_dataset.column_names if column_name != 'input_text'])
+#
+# # 48168개
+# combined_dataset = concatenate_datasets(
+#     [processed_dataset, ai_hub_precedents_dataset, law_qa_dataset, law_translate_dataset, textbooks_dataset]).shuffle()
+# combined_dataset = combined_dataset.select(range(10000))
 
-textbooks_dataset = korean_textbooks(945, 'tiny-textbooks')
-# textbooks_dataset = korean_textbooks(200, 'tiny-textbooks')
-textbooks_dataset = textbooks_dataset.remove_columns(
-    [column_name for column_name in textbooks_dataset.column_names if column_name != 'input_text'])
+# doc 데이터
+with open('/data/sangbul.json', 'r', encoding='utf-8') as f:
+    results = json.load(f)
 
-# 48168개
-combined_dataset = concatenate_datasets(
-    [processed_dataset, ai_hub_precedents_dataset, law_qa_dataset, law_translate_dataset, textbooks_dataset]).shuffle()
-combined_dataset = combined_dataset.select(range(10000))
+df = pd.DataFrame(results)
+combined_dataset = Dataset.from_pandas(df)
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
@@ -92,7 +101,7 @@ def print_trainable_parameters(model):
 
 from peft import LoraConfig, get_peft_model
 config = LoraConfig(
-    r=8,
+    r=16,
     lora_alpha=16,
     target_modules=[
         "q_proj",
@@ -152,6 +161,25 @@ training_arguments_c = TrainingArguments(
     report_to="wandb"
 )
 
+training_arguments_one_doc = TrainingArguments(
+    output_dir="./results",
+    num_train_epochs=20,
+    per_device_train_batch_size=1,
+    gradient_accumulation_steps=1,
+    deepspeed="deepspeed_one_config.json",
+    optim="adamw_torch",
+    save_steps=10,
+    logging_steps=1,
+    learning_rate=1e-05,
+    weight_decay=0.1,
+    fp16=False,
+    bf16=False,
+    max_grad_norm=1.0,
+    max_steps=-1,
+    warmup_ratio=0.1,
+    group_by_length=False,
+    report_to="none"
+)
 
 data_collator = DataCollatorForLanguageModeling(
     tokenizer, mlm=False, pad_to_multiple_of=8, return_tensors="pt"
@@ -159,7 +187,7 @@ data_collator = DataCollatorForLanguageModeling(
 
 trainer = Trainer(
     model=model,
-    args=training_arguments_c,
+    args=training_arguments_one_doc,
     train_dataset=tokenized_dataset,
     eval_dataset=None,
     tokenizer=tokenizer,
