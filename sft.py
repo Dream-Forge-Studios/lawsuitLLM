@@ -39,8 +39,8 @@ model = AutoModelForCausalLM.from_pretrained(
 
 cutoff_len = 4096
 
-# tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
-# tokenizer.pad_token = tokenizer.eos_token
+tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
+tokenizer.pad_token = tokenizer.eos_token
 #
 # def tokenize_function(examples):
 #     return tokenizer(examples['input_text'], truncation=True, padding=True, max_length=cutoff_len)
@@ -110,7 +110,7 @@ print_trainable_parameters(model)
 
 # Accelerator prepares model and other components
 # model, tokenizer, tokenized_dataset = accelerator.prepare(model, tokenizer, tokenized_dataset)
-model = accelerator.prepare(model)
+model, tokenizer = accelerator.prepare(model, tokenizer)
 
 from transformers import TrainingArguments, Trainer, DataCollatorForLanguageModeling
 # import wandb
@@ -167,6 +167,7 @@ trainer = SFTTrainer(
     model=model,
     args=training_arguments_c,
     train_dataset=transformed_data,
+    tokenizer=tokenizer,
     packing=False
 )
 print(trainer.args)
@@ -188,4 +189,4 @@ else:
     original_model = trainer.model
 
 original_model.save_pretrained(new_model)
-wandb.finish()
+# wandb.finish()
