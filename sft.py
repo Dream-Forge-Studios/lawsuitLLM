@@ -6,7 +6,7 @@ import json
 import pandas as pd
 from datasets import Dataset
 
-new_model = "/data/llm/lawsuit-7B-pretain-r8"
+new_model = "D:\docChatbot\sangbul-sft-e1"
 new_model = r"/data/docLLM/sangbul-sft-e1"
 
 # doc 데이터
@@ -112,10 +112,6 @@ print_trainable_parameters(model)
 # model, tokenizer, tokenized_dataset = accelerator.prepare(model, tokenizer, tokenized_dataset)
 model = accelerator.prepare(model)
 
-# if torch.cuda.device_count() > 1: # If more than 1 GPU
-#     model.is_parallelizable = True
-#     model.model_parallel = True
-
 from transformers import TrainingArguments, Trainer, DataCollatorForLanguageModeling
 import wandb
 
@@ -151,7 +147,7 @@ training_arguments_one_doc = TrainingArguments(
     output_dir="/data/doc_save_steps",
     num_train_epochs=200,
     per_device_train_batch_size=1,
-    gradient_accumulation_steps=1,
+    gradient_accumulation_steps=4,
     deepspeed="deepspeed_one_config.json",
     optim="adamw_torch",
     save_steps=50,
