@@ -7,7 +7,7 @@ import pandas as pd
 from datasets import Dataset
 
 new_model = "/data/llm/lawsuit-7B-pretain-r8"
-new_model = r"/data/docLLM/sangbul-e200"
+new_model = r"/data/docLLM/sangbul-sft-e1"
 
 # doc 데이터
 # with open('/data/doc_sft_data.json', 'r', encoding='utf-8') as f:
@@ -169,7 +169,7 @@ training_arguments_one_doc = TrainingArguments(
 
 trainer = SFTTrainer(
     model,
-    args=training_arguments_one_doc,
+    args=training_arguments_c,
     train_dataset=transformed_data,
     packing=False
 )
