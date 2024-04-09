@@ -121,23 +121,23 @@ from transformers import TrainingArguments, Trainer, DataCollatorForLanguageMode
 # model.config.use_cache = False  # silence the warnings. Please re-enable for inference!
 
 training_arguments_c = TrainingArguments(
-    output_dir="/data/save_steps",
+    output_dir="./results",
     num_train_epochs=1,
     per_device_train_batch_size=1,
     gradient_accumulation_steps=4,
-    deepspeed="deepspeed_config.json",
-    save_steps=50,
-    logging_dir="./logs",
-    logging_steps= 10,
-    learning_rate=1e-05,
+    optim="paged_adamw_32bit",
+    save_steps=10,
+    logging_steps=10,
+    learning_rate=2e-4,
     weight_decay=0.1,
-    fp16=True,
+    fp16=False,
     bf16=False,
-    max_grad_norm=1,
+    max_grad_norm=0.3,
     max_steps=-1,
-    warmup_ratio=0.1,
-    remove_unused_columns=False,
-    report_to="wandb"
+    warmup_ratio=0.3,
+    group_by_length=True,
+    lr_scheduler_type="constant",
+    # report_to="wandb"
 )
 
 training_arguments_one_doc = TrainingArguments(
@@ -186,11 +186,11 @@ trainer = SFTTrainer(
     model=model,
     train_dataset=dataset,
     peft_config=config,
-    max_seq_length= None,
+    max_seq_length=None,
     dataset_text_field="chat_sample",
     tokenizer=tokenizer,
     args=training_arguments_c,
-    packing= False,
+    packing=False,
 )
 print(trainer.args)
 
