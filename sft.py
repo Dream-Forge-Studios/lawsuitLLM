@@ -24,7 +24,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
 # base_model = "D:\Synatra-7B-v0.3-dpo"
 
-accelerator = Accelerator()
+# accelerator = Accelerator()
 
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
@@ -32,10 +32,16 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_quant_type="nf4",
     bnb_4bit_compute_dtype=torch.bfloat16
 )
+# model = AutoModelForCausalLM.from_pretrained(
+#     base_model,
+#     quantization_config=bnb_config,
+#     device_map = {"": accelerator.local_process_index})
+
 model = AutoModelForCausalLM.from_pretrained(
     base_model,
     quantization_config=bnb_config,
-    device_map = {"": accelerator.local_process_index})
+    device_map="auto"
+)
 
 cutoff_len = 4096
 
