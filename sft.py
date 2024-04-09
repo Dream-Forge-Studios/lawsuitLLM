@@ -39,17 +39,17 @@ model = AutoModelForCausalLM.from_pretrained(
 
 cutoff_len = 4096
 
-tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
-tokenizer.pad_token = tokenizer.eos_token
-
-def tokenize_function(examples):
-    return tokenizer(examples['input_text'], truncation=True, padding=True, max_length=cutoff_len)
-
-with open('doc_sft_data.json', 'r', encoding='utf-8') as file:
-    data = json.load(file)
+# tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
+# tokenizer.pad_token = tokenizer.eos_token
+#
+# def tokenize_function(examples):
+#     return tokenizer(examples['input_text'], truncation=True, padding=True, max_length=cutoff_len)
 
 # 변환된 데이터를 저장할 리스트
 transformed_data = []
+
+with open('doc_sft_data.json', 'r', encoding='utf-8') as file:
+    data = json.load(file)
 
 for item in data:
     for qa in item['qa']:
@@ -113,13 +113,13 @@ print_trainable_parameters(model)
 model = accelerator.prepare(model)
 
 from transformers import TrainingArguments, Trainer, DataCollatorForLanguageModeling
-import wandb
-
-with open('/data/llm/wandbKey_js.txt', 'r') as file:
-    wandb_key = file.read().strip()
-
-wandb.login(key=wandb_key)
-run = wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training", anonymous="allow")
+# import wandb
+#
+# with open('/data/llm/wandbKey_js.txt', 'r') as file:
+#     wandb_key = file.read().strip()
+#
+# wandb.login(key=wandb_key)
+# run = wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training", anonymous="allow")
 
 # model.config.use_cache = False  # silence the warnings. Please re-enable for inference!
 
@@ -164,7 +164,7 @@ training_arguments_one_doc = TrainingArguments(
 )
 
 trainer = SFTTrainer(
-    model,
+    model=model,
     args=training_arguments_c,
     train_dataset=transformed_data,
     packing=False
