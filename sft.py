@@ -137,7 +137,6 @@ training_arguments_c = TrainingArguments(
     warmup_ratio=0.3,
     group_by_length=True,
     lr_scheduler_type="constant",
-    # report_to="wandb"
 )
 
 training_arguments_one_doc = TrainingArguments(
