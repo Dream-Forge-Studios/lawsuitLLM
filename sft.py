@@ -53,11 +53,11 @@ with open('doc_sft_data.json', 'r', encoding='utf-8') as file:
 
 for item in data:
     for qa in item['qa']:
-        transformed_item = {"messages": [
+        transformed_item = [
                                      {"role":  "system",  "content":  "주어진 질문과 답변은 강원대학교 학생 상벌에 관한 규정을 기반으로 합니다."} ,
                                      {"role":  "user",  "content":  qa['question']},
                                      {"role":  "assistant",  "content":  qa['answer']}
-                                 ]}
+                                 ]
         transformed_data.append(transformed_item)
 
 # 데이터셋 토큰화 적용
