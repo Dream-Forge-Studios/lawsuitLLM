@@ -110,15 +110,15 @@ model = get_peft_model(model, config)
 # model, tokenizer = accelerator.prepare(model, tokenizer)
 
 from transformers import TrainingArguments, Trainer, DataCollatorForLanguageModeling
-# import wandb
-#
-# with open('/data/llm/wandbKey_js.txt', 'r') as file:
-#     wandb_key = file.read().strip()
-#
-# wandb.login(key=wandb_key)
-# run = wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training", anonymous="allow")
+import wandb
 
-# model.config.use_cache = False  # silence the warnings. Please re-enable for inference!
+with open('/data/llm/wandbKey_js.txt', 'r') as file:
+    wandb_key = file.read().strip()
+
+wandb.login(key=wandb_key)
+run = wandb.init(project='Fine tuning mistral 7B civil wage', job_type="training", anonymous="allow")
+
+model.config.use_cache = False  # silence the warnings. Please re-enable for inference!
 
 training_arguments_c = TrainingArguments(
     output_dir="./results",
@@ -137,6 +137,7 @@ training_arguments_c = TrainingArguments(
     warmup_ratio=0.3,
     group_by_length=True,
     lr_scheduler_type="constant",
+    report_to="none"
 )
 
 training_arguments_one_doc = TrainingArguments(
@@ -210,4 +211,4 @@ else:
     original_model = trainer.model
 
 original_model.save_pretrained(new_model)
-# wandb.finish()
+wandb.finish()
