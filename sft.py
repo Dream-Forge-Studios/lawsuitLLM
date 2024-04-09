@@ -100,14 +100,14 @@ config = LoraConfig(
     task_type="CAUSAL_LM",
 )
 model = get_peft_model(model, config)
-print_trainable_parameters(model)
+# print_trainable_parameters(model)
 
 # # Apply the accelerator. You can comment this out to remove the accelerator.
 # model = accelerator.prepare_model(model)
 
 # Accelerator prepares model and other components
 # model, tokenizer, tokenized_dataset = accelerator.prepare(model, tokenizer, tokenized_dataset)
-model, tokenizer = accelerator.prepare(model, tokenizer)
+# model, tokenizer = accelerator.prepare(model, tokenizer)
 
 from transformers import TrainingArguments, Trainer, DataCollatorForLanguageModeling
 # import wandb
