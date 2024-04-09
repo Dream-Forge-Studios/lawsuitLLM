@@ -22,7 +22,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
 # base_model = "maywell/Synatra-7B-v0.3-dpo"
 base_model = "/data/llm/Synatra-7B-v0.3-dpo"
-base_model = "D:\Synatra-7B-v0.3-dpo"
+# base_model = "D:\Synatra-7B-v0.3-dpo"
 
 accelerator = Accelerator()
 
