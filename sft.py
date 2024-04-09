@@ -1,5 +1,5 @@
 from accelerate import Accelerator
-from trl import SFTTrainer
+from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 from torch.distributed.fsdp.fully_sharded_data_parallel import FullOptimStateDictConfig, FullStateDictConfig
 import os
 import json
@@ -46,23 +46,20 @@ tokenizer.pad_token = tokenizer.eos_token
 #     return tokenizer(examples['input_text'], truncation=True, padding=True, max_length=cutoff_len)
 
 # 변환된 데이터를 저장할 리스트
-transformed_data = []
+results = []
 
 with open('doc_sft_data.json', 'r', encoding='utf-8') as file:
     data = json.load(file)
 
+system_prompt = "주어진 질문과 답변은 강원대학교 학생 상벌에 관한 규정을 기반으로 합니다."
+B_INST, E_INST = "[INST]", "[/INST]"
 for item in data:
     for qa in item['qa']:
-        transformed_item = [
-                                     {"role":  "system",  "content":  "주어진 질문과 답변은 강원대학교 학생 상벌에 관한 규정을 기반으로 합니다."} ,
-                                     {"role":  "user",  "content":  qa['question']},
-                                     {"role":  "assistant",  "content":  qa['answer']}
-                                 ]
-        transformed_data.append(transformed_item)
+        temp = f"{system_prompt}{B_INST}{qa['question'].strip()}\n{E_INST}{qa['answer'].strip()}"
+        results.append({"chat_sample": temp})
 
-# 데이터셋 토큰화 적용
-# tokenized_dataset = combined_dataset.map(tokenize_function, batched=True)
-# tokenized_dataset = tokenized_dataset.remove_columns(["input_text"])
+df = pd.DataFrame(results)
+dataset = Dataset.from_pandas(df)
 
 from peft import prepare_model_for_kbit_training
 
@@ -163,12 +160,37 @@ training_arguments_one_doc = TrainingArguments(
     report_to="none"
 )
 
+
+# 데이터 콜레이터 인스턴스 생성
+# collator = DataCollatorForCompletionOnlyLM(
+#     tokenizer=tokenizer,
+#     mlm=False,
+#     instruction_template="<s>[INST]",
+#     response_template="[/INST]",
+#     pad_to_multiple_of=8  # 필요한 경우 패딩을 특정 배수로 맞춤
+# )
+
+# Setting sft parameters
+# trainer = SFTTrainer(
+#     model=model,
+#     train_dataset=dataset,
+#     data_collator=collator,
+#     peft_config=peft_config,
+#     max_seq_length= None,
+#     tokenizer=tokenizer,
+#     args=training_arguments_a,
+#     packing= False,
+# )
+
 trainer = SFTTrainer(
     model=model,
-    args=training_arguments_c,
-    train_dataset=transformed_data,
+    train_dataset=dataset,
+    peft_config=config,
+    max_seq_length= None,
+    dataset_text_field="chat_sample",
     tokenizer=tokenizer,
-    packing=True
+    args=training_arguments_c,
+    packing= False,
 )
 print(trainer.args)
 
