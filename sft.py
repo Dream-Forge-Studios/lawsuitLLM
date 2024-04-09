@@ -168,7 +168,7 @@ trainer = SFTTrainer(
     args=training_arguments_c,
     train_dataset=transformed_data,
     tokenizer=tokenizer,
-    packing=False
+    packing=True
 )
 print(trainer.args)
 
